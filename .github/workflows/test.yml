@@ -1,0 +1,28 @@
+name: Test Environment CI/CD
+
+on:
+  push:
+    branches:
+      - test
+  pull_request:
+    branches:
+      - test
+
+jobs:
+  test-pipeline:
+    uses: ./.github/workflows/Backend.yml
+    with:
+      ENVIRONMENT: test
+      SKIP_DB_SETUP: false
+      SKIP_DEPLOY: true
+      RUN_INTEGRATION_TESTS: true
+      DOCKER_BUILD: false
+      DOCKER_PUSH: false
+    secrets:
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      DOCKER_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}

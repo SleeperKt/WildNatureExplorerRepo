@@ -1,0 +1,27 @@
+name: Dev Environment CI/CD
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+
+jobs:
+  dev-pipeline:
+    uses: ./.github/workflows/Backend.yml
+    with:
+      ENVIRONMENT: dev
+      SKIP_DB_SETUP: false
+      SKIP_DEPLOY: false
+      RUN_INTEGRATION_TESTS: true
+      DOCKER_BUILD: true
+      DOCKER_PUSH: true
+    secrets:
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      DOCKER_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
