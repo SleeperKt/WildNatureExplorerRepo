@@ -10,7 +10,7 @@ on:
 
 jobs:
   test-pipeline:
-    uses: ./.github/workflows/backend.yml
+    uses: ./.github/workflows/Backend.yml
     with:
       ENVIRONMENT: test
       SKIP_DB_SETUP: false
