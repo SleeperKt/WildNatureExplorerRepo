@@ -1,0 +1,12 @@
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\bin\Debug\net8.0\WildNatureExplorer.Domain.deps.json
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\bin\Debug\net8.0\WildNatureExplorer.Domain.dll
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\bin\Debug\net8.0\WildNatureExplorer.Domain.pdb
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\obj\Debug\net8.0\WildNatureExplorer.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\obj\Debug\net8.0\WildNatureExplorer.Domain.AssemblyInfoInputs.cache
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\obj\Debug\net8.0\WildNatureExplorer.Domain.AssemblyInfo.cs
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\obj\Debug\net8.0\WildNatureExplorer.Domain.csproj.CoreCompileInputs.cache
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\obj\Debug\net8.0\WildNatureExplorer.Domain.sourcelink.json
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\obj\Debug\net8.0\WildNatureExplorer.Domain.dll
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\obj\Debug\net8.0\refint\WildNatureExplorer.Domain.dll
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\obj\Debug\net8.0\WildNatureExplorer.Domain.pdb
+C:\Users\Aldrig\Documents\WildNatureExplorerRepo\code\WildNatureExplorer.Domain\obj\Debug\net8.0\ref\WildNatureExplorer.Domain.dll
