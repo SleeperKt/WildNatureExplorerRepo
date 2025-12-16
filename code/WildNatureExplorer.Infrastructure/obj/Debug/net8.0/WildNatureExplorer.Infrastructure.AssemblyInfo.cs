@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WildNatureExplorer.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8211502814983c4691f9b721659295e578bbe7fb")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a8041ed812ac8d4634bef4628a064f196d3275e4")]
 [assembly: System.Reflection.AssemblyProductAttribute("WildNatureExplorer.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WildNatureExplorer.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
