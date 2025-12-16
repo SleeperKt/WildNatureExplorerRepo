@@ -85,6 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: ${{ inputs.SKIP_DB_SETUP != 'true' }}
+  
     services:
       postgres:
         image: postgres:15
@@ -92,23 +93,40 @@ jobs:
           POSTGRES_USER: ${{ secrets.DB_USER }}
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
           POSTGRES_DB: ${{ secrets.DB_NAME }}
-        ports:
-          - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U ${{ secrets.DB_USER }}" 
-          --health-interval 10s 
-          --health-timeout 5s 
+          --health-cmd "pg_isready -U $POSTGRES_USER"
+          --health-interval 10s
+          --health-timeout 5s
           --health-retries 5
+  
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+      - uses: actions/checkout@v4
+  
+      - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
-      - name: Run EF migrations
+  
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            pg_isready -h localhost -p 5432 -U "${{ secrets.DB_USER }}" && break
+            sleep 2
+          done
+  
+      - name: Install dotnet-ef
         run: |
           dotnet tool install --global dotnet-ef
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+  
+      - name: Run EF migrations
+        env:
+          ConnectionStrings__DefaultConnection: |
+            Host=localhost;
+            Port=5432;
+            Database=${{ secrets.DB_NAME }};
+            Username=${{ secrets.DB_USER }};
+            Password=${{ secrets.DB_PASSWORD }};
+        run: |
           dotnet ef database update \
             --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
             --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
