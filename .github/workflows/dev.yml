@@ -9,7 +9,7 @@ on:
 
 jobs:
   dev-pipeline:
-    uses: ./.github/workflows/backend.yml
+    uses: ./.github/workflows/Backend.yml
     with:
       ENVIRONMENT: dev
       SKIP_DB_SETUP: false
