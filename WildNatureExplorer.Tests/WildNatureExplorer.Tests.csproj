@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="Moq" Version="4.18.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\code\WildNatureExplorer.Domain\WildNatureExplorer.Domain.csproj" />
+    <ProjectReference Include="..\code\WildNatureExplorer.Application\WildNatureExplorer.Application.csproj" />
+    <ProjectReference Include="..\code\WildNatureExplorer.Infrastructure\WildNatureExplorer.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
