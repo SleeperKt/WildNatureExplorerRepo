@@ -40,7 +40,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.UpdatedAt)
                .IsRequired();
 
-        builder.HasMany(x => x.Roles)
+        builder.HasMany(x => x.UserRoles)
                .WithOne(x => x.User)
                .HasForeignKey(x => x.UserId);
     }
