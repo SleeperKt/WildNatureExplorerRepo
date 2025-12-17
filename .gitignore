@@ -32,7 +32,6 @@ packages/
 *.db
 *.db-shm
 *.db-wal
-Migrations/
 
 # Docker
 docker-compose.override.yml
