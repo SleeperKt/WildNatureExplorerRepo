@@ -77,9 +77,12 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
-      - name: Run code analysis (placeholder)
-        run: echo "Run static analysis / Sonar here"
-        
+      - name: Run dotnet format
+        run: |
+          dotnet tool install -g dotnet-format
+          dotnet-format ./WildNatureExplorer.sln --check
+
+    
   db-setup:
     name: DB Setup
     runs-on: ubuntu-latest
@@ -93,7 +96,6 @@ jobs:
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   
-    # Сервис PostgreSQL
     services:
       postgres:
         image: postgres:15
@@ -165,7 +167,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - name: Run unit tests
-        run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --no-build --filter "Category=Unit"
+        run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --filter "Category=Unit"
 
   integration-tests:
     name: Integration Tests
@@ -184,7 +186,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - name: Run integration tests
-        run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --no-build --filter "Category=Integration"
+        run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --filter "Category=Integration"
 
   docker-build:
     name: Docker Build

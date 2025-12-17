@@ -10,7 +10,7 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
         // Берём переменные окружения
         var host = Environment.GetEnvironmentVariable("DB_HOST");
         var port = Environment.GetEnvironmentVariable("DB_PORT");
-        var db   = Environment.GetEnvironmentVariable("DB_NAME");
+        var db = Environment.GetEnvironmentVariable("DB_NAME");
         var user = Environment.GetEnvironmentVariable("DB_USER");
         var pass = Environment.GetEnvironmentVariable("DB_PASSWORD");
 

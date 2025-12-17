@@ -6,6 +6,7 @@ COPY ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj ./WildNatureExp
 COPY ./code/WildNatureExplorer.Application/WildNatureExplorer.Application.csproj ./WildNatureExplorer.Application/
 COPY ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj ./WildNatureExplorer.Infrastructure/
 COPY ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj ./WildNatureExplorer.Tests/
+COPY ./code/WildNatureExplorer.Domain/WildNatureExplorer.Domain.csproj WildNatureExplorer.Domain/
 
 RUN dotnet restore ./WildNatureExplorer.API/WildNatureExplorer.API.csproj
 
@@ -22,13 +23,17 @@ WORKDIR /app
 
 COPY --from=build /app/publish .
 
-RUN adduser -D appuser
+RUN adduser -D appuser \
+    && mkdir -p /home/appuser/.aspnet/DataProtection-Keys \
+    && chown -R appuser:appuser /home/appuser/.aspnet/DataProtection-Keys
 USER appuser
+
+RUN chown -R appuser:appuser /home/appuser/.aspnet/DataProtection-Keys
 
 ENV ASPNETCORE_URLS=http://+:5000
 EXPOSE 5000
 
-HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+HEALTHCHECK --interval=120s --timeout=5s --retries=5 \
     CMD wget --spider -q http://localhost:5000/health || exit 1
 
 ENTRYPOINT ["dotnet", "WildNatureExplorer.API.dll"]
