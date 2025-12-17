@@ -105,7 +105,13 @@ jobs:
       - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
-  
+          
+      - name: Debug env
+        run: |
+          echo "DB_HOST=$DB_HOST"
+          echo "DB_USER=$DB_USER"
+          echo "DB_PASSWORD=$DB_PASSWORD"
+
       - name: Wait for PostgreSQL
         run: |
           echo "Waiting for PostgreSQL to be ready..."
