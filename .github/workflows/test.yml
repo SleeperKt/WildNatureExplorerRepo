@@ -17,7 +17,6 @@ jobs:
       SKIP_DEPLOY: true
       RUN_INTEGRATION_TESTS: true
       DOCKER_BUILD: false
-      DOCKER_PUSH: false
     secrets:
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
