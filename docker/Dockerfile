@@ -3,9 +3,14 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 WORKDIR /src
 
 COPY ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj ./WildNatureExplorer.API/
+COPY ./code/WildNatureExplorer.Application/WildNatureExplorer.Application.csproj ./WildNatureExplorer.Application/
+COPY ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj ./WildNatureExplorer.Infrastructure/
+COPY ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj ./WildNatureExplorer.Tests/
+
 RUN dotnet restore ./WildNatureExplorer.API/WildNatureExplorer.API.csproj
 
-COPY ./code/WildNatureExplorer.API ./WildNatureExplorer.API
+COPY ./code/ .
+
 WORKDIR /src/WildNatureExplorer.API
 
 RUN dotnet publish -c Release -o /app/publish --no-self-contained
