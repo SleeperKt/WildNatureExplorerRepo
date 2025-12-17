@@ -134,10 +134,13 @@ jobs:
         run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
   
       - name: Run EF migrations
+        env:
+          ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }}
         run: |
           dotnet ef database update \
             --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
             --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
 
 
 
