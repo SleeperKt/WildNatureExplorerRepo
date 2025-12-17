@@ -115,7 +115,7 @@ jobs:
   
       - name: Install dotnet-ef
         run: |
-          dotnet tool install --global dotnet-ef
+          dotnet tool install --global dotnet-ef --version 8.*
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
           
       - name: Restore dependencies
