@@ -79,13 +79,21 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Run code analysis (placeholder)
         run: echo "Run static analysis / Sonar here"
-
+        
   db-setup:
     name: DB Setup
     runs-on: ubuntu-latest
     needs: build
     if: ${{ inputs.SKIP_DB_SETUP != 'true' }}
+    
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   
+    # Сервис PostgreSQL
     services:
       postgres:
         image: postgres:15
@@ -93,6 +101,8 @@ jobs:
           POSTGRES_USER: ${{ secrets.DB_USER }}
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
           POSTGRES_DB: ${{ secrets.DB_NAME }}
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd "pg_isready -U $POSTGRES_USER"
           --health-interval 10s
@@ -100,36 +110,44 @@ jobs:
           --health-retries 5
   
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
   
-      - uses: actions/setup-dotnet@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
   
       - name: Wait for PostgreSQL
         run: |
+          echo "Waiting for PostgreSQL to be ready..."
           for i in {1..30}; do
-            pg_isready -h localhost -p 5432 -U "${{ secrets.DB_USER }}" && break
+            pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER && break
             sleep 2
           done
   
       - name: Install dotnet-ef
         run: |
-          dotnet tool install --global dotnet-ef
+          dotnet tool install --global dotnet-ef --version 8.*
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+  
+      - name: Restore dependencies
+        run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
   
       - name: Run EF migrations
         env:
-          ConnectionStrings__DefaultConnection: |
-            Host=localhost;
-            Port=5432;
-            Database=${{ secrets.DB_NAME }};
-            Username=${{ secrets.DB_USER }};
-            Password=${{ secrets.DB_PASSWORD }};
+          ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }}
         run: |
           dotnet ef database update \
             --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
             --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
+      - name: List migrations
+        run: |
+          dotnet ef migrations list \
+            --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+            --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
 
   unit-tests:
     name: Unit Tests
