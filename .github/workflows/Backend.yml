@@ -110,7 +110,7 @@ jobs:
         run: |
           echo "Waiting for PostgreSQL to be ready..."
           for i in {1..30}; do
-            PGPASSWORD="${{ secrets.DB_PASSWORD }}" pg_isready -h localhost -p 5432 -U "${{ secrets.DB_USER }}" && break
+            PGPASSWORD="${{ secrets.DB_PASSWORD }}" pg_isready -h postgres -p 5432 -U "${{ secrets.DB_USER }}" && break
             sleep 2
           done
   
@@ -124,7 +124,7 @@ jobs:
   
       - name: Run EF migrations
         env:
-          DB_HOST: localhost
+          DB_HOST: postgres
           DB_PORT: 5432
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
