@@ -27,11 +27,6 @@ on:
         required: true
         default: true
         type: boolean
-      DOCKER_PUSH:
-        description: "Push Docker image"
-        required: true
-        default: true
-        type: boolean
     secrets:
       DB_USER:
         required: true
@@ -188,7 +183,7 @@ jobs:
     name: Docker Build & Push
     runs-on: ubuntu-latest
     needs: [integration-tests]
-  
+    if: ${{ inputs.DOCKER_BUILD = true }}
     steps:
       - uses: actions/checkout@v4
   
