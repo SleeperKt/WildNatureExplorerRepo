@@ -86,9 +86,8 @@ jobs:
     needs: build
     if: ${{ inputs.SKIP_DB_SETUP != 'true' }}
     
-    # Job-уровневые переменные окружения
     env:
-      DB_HOST: postgres
+      DB_HOST: localhost
       DB_PORT: 5432
       DB_NAME: ${{ secrets.DB_NAME }}
       DB_USER: ${{ secrets.DB_USER }}
@@ -135,13 +134,11 @@ jobs:
   
       - name: Run EF migrations
         env:
-          ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }}
+          ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }}
         run: |
           dotnet ef database update \
             --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
             --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
-
-
 
 
   unit-tests:
