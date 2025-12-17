@@ -183,7 +183,7 @@ jobs:
     name: Docker Build & Push
     runs-on: ubuntu-latest
     needs: [integration-tests]
-    if: ${{ inputs.DOCKER_BUILD = true }}
+    if: ${{ inputs.DOCKER_BUILD == true }}
     steps:
       - uses: actions/checkout@v4
   
