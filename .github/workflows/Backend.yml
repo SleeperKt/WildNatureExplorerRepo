@@ -19,17 +19,17 @@ on:
         type: boolean
       RUN_INTEGRATION_TESTS:
         description: "Run integration tests"
-        required: false
+        required: true
         default: true
         type: boolean
       DOCKER_BUILD:
         description: "Build Docker image"
-        required: false
+        required: true
         default: true
         type: boolean
       DOCKER_PUSH:
         description: "Push Docker image"
-        required: false
+        required: true
         default: true
         type: boolean
     secrets:
