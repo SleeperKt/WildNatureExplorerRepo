@@ -117,6 +117,9 @@ jobs:
         run: |
           dotnet tool install --global dotnet-ef
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+          
+      - name: Restore dependencies
+        run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
   
       - name: Run EF migrations
         env:
