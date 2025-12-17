@@ -79,7 +79,7 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Run code analysis (placeholder)
         run: echo "Run static analysis / Sonar here"
-
+        
   db-setup:
     name: DB Setup
     runs-on: ubuntu-latest
@@ -108,8 +108,9 @@ jobs:
   
       - name: Wait for PostgreSQL
         run: |
+          echo "Waiting for PostgreSQL to be ready..."
           for i in {1..30}; do
-            pg_isready -h localhost -p 5432 -U "${{ secrets.DB_USER }}" && break
+            PGPASSWORD="${{ secrets.DB_PASSWORD }}" pg_isready -h localhost -p 5432 -U "${{ secrets.DB_USER }}" && break
             sleep 2
           done
   
@@ -117,22 +118,22 @@ jobs:
         run: |
           dotnet tool install --global dotnet-ef --version 8.*
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-          
+  
       - name: Restore dependencies
         run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
   
       - name: Run EF migrations
         env:
-          ConnectionStrings__DefaultConnection: |
-            Host=localhost;
-            Port=5432;
-            Database=${{ secrets.DB_NAME }};
-            Username=${{ secrets.DB_USER }};
-            Password=${{ secrets.DB_PASSWORD }};
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           dotnet ef database update \
             --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
             --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
 
   unit-tests:
     name: Unit Tests
