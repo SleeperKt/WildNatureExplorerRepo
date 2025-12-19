@@ -28,17 +28,35 @@ on:
         default: true
         type: boolean
     secrets:
+      DB_HOST:
+        required: true
+      DB_PORT:
+        required: true
       DB_USER:
         required: true
       DB_PASSWORD:
         required: true
       DB_NAME:
         required: true
-      JWT_SECRET:
+      JWT_KEY:
+        required: true
+      JWT_ISSUER:
+        required: true
+      JWT_AUDIENCE:
+        required: true
+      GROQ_API_KEY:
+        required: true
+      HF_API_KEY:
         required: true
       DOCKERHUB_USERNAME:
         required: true
       DOCKERHUB_TOKEN:
+        required: true
+      AZURE_CREDENTIALS:
+        required: true
+      AZURE_STORAGE_ACCOUNT:
+        required: true
+      AZURE_STORAGE_KEY":
         required: true
 
 jobs:
@@ -223,10 +241,16 @@ jobs:
           app-name: "wild-nature-explorer-web-app"
           images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest"
           configuration-settings: |
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=${{ secrets.DB_PORT }}
             DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             DB_NAME=${{ secrets.DB_NAME }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_ISSUER=${{ secrets.JWT_ISSUER }}
+            JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}
+            GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
+            HF_API_KEY=${{ secrets.HF_API_KEY }}
+            JWT_KEY=${{ secrets.JWT_KEY }}
             AZURE_STORAGE_ACCOUNT=${{ secrets.AZURE_STORAGE_ACCOUNT }}
             AZURE_STORAGE_KEY=${{ secrets.AZURE_STORAGE_KEY }}
 
