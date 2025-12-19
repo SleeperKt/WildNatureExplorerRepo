@@ -278,7 +278,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Deploy to Azure Web App (Container)
-        uses: azure/webapps-container-deploy@v2
+        uses: azure/webapps-container-deploy@latest
         with:
           app-name: "wild-nature-explorer-web-app"
           images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest"
