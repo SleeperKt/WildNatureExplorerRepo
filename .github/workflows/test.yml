@@ -18,9 +18,6 @@ jobs:
       RUN_INTEGRATION_TESTS: true
       DOCKER_BUILD: true
     secrets:
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_NAME: ${{ secrets.DB_NAME }}
       JWT_KEY: ${{ secrets.JWT_KEY }}
       JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
       JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
@@ -31,8 +28,8 @@ jobs:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
       AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
-      AZURE_DB_HOST: ${{ secrets.AZURE_DB_HOST }}
-      AZURE_DB_PORT: ${{ secrets.AZURE_DB_PORT }}
-      AZURE_DB_NAME: ${{ secrets.AZURE_DB_NAME }}
-      AZURE_DB_USER: ${{ secrets.AZURE_DB_USER }}
-      AZURE_DB_PASSWORD: ${{ secrets.AZURE_DB_PASSWORD }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
