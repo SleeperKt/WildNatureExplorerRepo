@@ -30,4 +30,4 @@ jobs:
       HF_API_KEY: ${{ secrets.HF_API_KEY }}
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-      
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
