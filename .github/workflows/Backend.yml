@@ -56,7 +56,7 @@ on:
         required: true
       AZURE_STORAGE_ACCOUNT:
         required: true
-      AZURE_STORAGE_KEY":
+      AZURE_STORAGE_KEY:
         required: true
 
 jobs:
