@@ -206,16 +206,27 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:${{ github.sha }}
 
-
   deploy:
-    name: Deploy
+    name: Deploy to Azure Web App
     runs-on: ubuntu-latest
     needs: [docker-build]
     if: ${{ inputs.SKIP_DEPLOY != true }}
-    env:
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
-      - name: Deploy placeholder
-        run: echo "Deploy app to Azure / Kubernetes here"
-      - name: Healthcheck
-        run: echo "Run healthcheck after deploy"
+      - uses: actions/checkout@v4
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Deploy to Azure Web App (Container)
+        uses: azure/webapps-container-deploy@v2
+        with:
+          app-name: "wild-nature-explorer-web-app"
+          images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest"
+          configuration-settings: |
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            AZURE_STORAGE_ACCOUNT=${{ secrets.AZURE_STORAGE_ACCOUNT }}
+            AZURE_STORAGE_KEY=${{ secrets.AZURE_STORAGE_KEY }}
+
