@@ -30,7 +30,7 @@ jobs:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
-      AZURE_STORAGE_KEY": ${{ secrets.AZURE_STORAGE_KEY }}
+      AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
       AZURE_DB_HOST: ${{ secrets.AZURE_DB_HOST }}
       AZURE_DB_PORT: ${{ secrets.AZURE_DB_PORT }}
       AZURE_DB_NAME: ${{ secrets.AZURE_DB_NAME }}
