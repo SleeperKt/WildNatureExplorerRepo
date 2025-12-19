@@ -28,10 +28,6 @@ on:
         default: true
         type: boolean
     secrets:
-      DB_HOST:
-        required: true
-      DB_PORT:
-        required: true
       DB_USER:
         required: true
       DB_PASSWORD:
@@ -58,7 +54,17 @@ on:
         required: true
       AZURE_STORAGE_KEY:
         required: true
-
+      AZURE_DB_HOST:
+        required: true
+      AZURE_DB_PORT:
+        required: true
+      AZURE_DB_NAME:
+        required: true
+      AZURE_DB_USER:
+        required: true
+      AZURE_DB_PASSWORD:
+        required: true
+      
 jobs:
   build:
     name: Build
@@ -197,6 +203,48 @@ jobs:
       - name: Run integration tests
         run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --filter "Category=Integration"
 
+  azure-db-migrations:
+    name: Apply Migrations to Azure DB
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    if: ${{ inputs.SKIP_DEPLOY != true }}
+    env:
+      AZURE_DB_HOST: ${{ secrets.AZURE_DB_HOST }}
+      AZURE_DB_PORT: ${{ secrets.AZURE_DB_PORT }}
+      AZURE_DB_NAME: ${{ secrets.AZURE_DB_NAME }}
+      AZURE_DB_USER: ${{ secrets.AZURE_DB_USER }}
+      AZURE_DB_PASSWORD: ${{ secrets.AZURE_DB_PASSWORD }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+  
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+  
+      - name: Install dotnet-ef
+        run: |
+          dotnet tool install --global dotnet-ef --version 8.*
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+  
+      - name: Restore dependencies
+        run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+  
+      - name: Apply EF migrations to Azure DB
+        env:
+          ConnectionStrings__DefaultConnection: Host=${{ secrets.AZURE_DB_HOST }};Port=${{ secrets.AZURE_DB_PORT }};Database=${{ secrets.AZURE_DB_NAME }};Username=${{ secrets.AZURE_DB_USER }};Password=${{ secrets.AZURE_DB_PASSWORD }}
+        run: |
+          dotnet ef database update \
+            --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+            --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+  
+      - name: List applied migrations
+        run: |
+          dotnet ef migrations list \
+            --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+            --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
   docker-build:
     name: Docker Build & Push
     runs-on: ubuntu-latest
@@ -241,11 +289,11 @@ jobs:
           app-name: "wild-nature-explorer-web-app"
           images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest"
           configuration-settings: |
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_NAME=${{ secrets.DB_NAME }}
+            AZURE_DB_HOST=${{ secrets.AZURE_DB_HOST }}
+            AZURE_DB_PORT=${{ secrets.AZURE_DB_PORT }}
+            AZURE_DB_USER=${{ secrets.AZURE_DB_USER }}
+            AZURE_DB_PASSWORD=${{ secrets.AZURE_DB_PASSWORD }}
+            AZURE_DB_NAME=${{ secrets.AZURE_DB_NAME }}
             JWT_ISSUER=${{ secrets.JWT_ISSUER }}
             JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}
             GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
