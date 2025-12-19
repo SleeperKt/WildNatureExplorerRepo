@@ -28,12 +28,6 @@ on:
         default: true
         type: boolean
     secrets:
-      DB_USER:
-        required: true
-      DB_PASSWORD:
-        required: true
-      DB_NAME:
-        required: true
       JWT_KEY:
         required: true
       JWT_ISSUER:
@@ -54,15 +48,15 @@ on:
         required: true
       AZURE_STORAGE_KEY:
         required: true
-      AZURE_DB_HOST:
+      DB_HOST:
         required: true
-      AZURE_DB_PORT:
+      DB_PORT:
         required: true
-      AZURE_DB_NAME:
+      DB_NAME:
         required: true
-      AZURE_DB_USER:
+      DB_USER:
         required: true
-      AZURE_DB_PASSWORD:
+      DB_PASSWORD:
         required: true
       
 jobs:
@@ -108,17 +102,17 @@ jobs:
     env:
       DB_HOST: localhost
       DB_PORT: 5432
-      DB_NAME: ${{ secrets.DB_NAME }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: wild_nature_explorer
+      DB_USER: postgres
+      DB_PASSWORD: postgres
   
     services:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: ${{ secrets.DB_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.DB_NAME }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: wild_nature_explorer
         ports:
           - 5432:5432
         options: >-
@@ -209,11 +203,11 @@ jobs:
     needs: [integration-tests]
     if: ${{ inputs.SKIP_DEPLOY != true }}
     env:
-      AZURE_DB_HOST: ${{ secrets.AZURE_DB_HOST }}
-      AZURE_DB_PORT: ${{ secrets.AZURE_DB_PORT }}
-      AZURE_DB_NAME: ${{ secrets.AZURE_DB_NAME }}
-      AZURE_DB_USER: ${{ secrets.AZURE_DB_USER }}
-      AZURE_DB_PASSWORD: ${{ secrets.AZURE_DB_PASSWORD }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -233,7 +227,7 @@ jobs:
   
       - name: Apply EF migrations to Azure DB
         env:
-          ConnectionStrings__DefaultConnection: Host=${{ secrets.AZURE_DB_HOST }};Port=${{ secrets.AZURE_DB_PORT }};Database=${{ secrets.AZURE_DB_NAME }};Username=${{ secrets.AZURE_DB_USER }};Password=${{ secrets.AZURE_DB_PASSWORD }}
+          ConnectionStrings__DefaultConnection: Host=${{ secrets.DB_HOST }};Port=${{ secrets.DB_PORT }};Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }}
         run: |
           dotnet ef database update \
             --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
@@ -289,11 +283,11 @@ jobs:
           app-name: "wild-nature-explorer-web-app"
           images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest"
           configuration-settings: |
-            AZURE_DB_HOST=${{ secrets.AZURE_DB_HOST }}
-            AZURE_DB_PORT=${{ secrets.AZURE_DB_PORT }}
-            AZURE_DB_USER=${{ secrets.AZURE_DB_USER }}
-            AZURE_DB_PASSWORD=${{ secrets.AZURE_DB_PASSWORD }}
-            AZURE_DB_NAME=${{ secrets.AZURE_DB_NAME }}
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
             JWT_ISSUER=${{ secrets.JWT_ISSUER }}
             JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}
             GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
