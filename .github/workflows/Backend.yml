@@ -288,9 +288,9 @@ jobs:
           app-name: wild-nature-explorer-web-app
           app-settings-json: |
             [
-              { "name": "Jwt__Key", "value": "${{ secrets.JWT_KEY }}" },
-              { "name": "Jwt__Issuer", "value": "${{ secrets.JWT_ISSUER }}" },
-              { "name": "Jwt__Audience", "value": "${{ secrets.JWT_AUDIENCE }}" },
+              { "name": "JWT_KEY", "value": "${{ secrets.JWT_KEY }}" },
+              { "name": "JWT_ISSUER", "value": "${{ secrets.JWT_ISSUER }}" },
+              { "name": "JWT_AUDIENCE", "value": "${{ secrets.JWT_AUDIENCE }}" },
       
               { "name": "DB_HOST", "value": "${{ secrets.DB_HOST }}" },
               { "name": "DB_PORT", "value": "${{ secrets.DB_PORT }}" },
