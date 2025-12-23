@@ -232,9 +232,7 @@ jobs:
         run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
       - name: Show effective connection string (masked)
         run: |
-          echo "$ConnectionStrings__DefaultConnection" \
-            | sed -E 's/Host=[^;]+/Host=***MASKED***/g' \
-            | sed -E 's/Password=[^;]+/Password=***MASKED***/g'
+          echo "$ConnectionStrings__DefaultConnection"
 
       - name: Apply EF migrations to Azure DB
         env:
