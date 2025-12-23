@@ -12,6 +12,8 @@ using Serilog;
 using WildNatureExplorer.Infrastructure;
 using WildNatureExplorer.Infrastructure.Migrations;
 using WildNatureExplorer.Application;
+using WildNatureExplorer.Application.DTOs.AI;
+
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -29,6 +31,10 @@ var connectionString = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" 
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
+
+builder.Services.AddScoped<IAiService, AiService>();
+builder.Services.AddHttpClient<HuggingFaceVisionService>();
+builder.Services.AddHttpClient<GroqChatService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
