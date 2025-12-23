@@ -28,6 +28,8 @@ public class UserService : IUserService
         if (user == null) throw new Exception("User not found");
 
         user.UpdateProfile(updateDto.FirstName, updateDto.LastName, updateDto.Email);
+        var existingUser = await _userRepository.GetByEmailAsync(updateDto.Email);
+        if (existingUser != null) throw new Exception("Email already in use");
         await _userRepository.UpdateAsync(user);
     }
 

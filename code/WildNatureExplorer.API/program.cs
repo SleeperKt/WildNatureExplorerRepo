@@ -13,6 +13,10 @@ using WildNatureExplorer.Infrastructure;
 using WildNatureExplorer.Infrastructure.Migrations;
 using WildNatureExplorer.Application;
 using WildNatureExplorer.Application.DTOs.AI;
+using FluentValidation.AspNetCore;
+using WildNatureExplorer.API.Middlewares;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 
 Log.Logger = new LoggerConfiguration()
@@ -57,6 +61,13 @@ var connectionString =
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+builder.Services.AddControllers()
+    .AddFluentValidation(config =>
+    {
+        config.RegisterValidatorsFromAssemblyContaining<Program>();
+        config.AutomaticValidationEnabled = true;
+    });
+
 builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.AddHttpClient<HuggingFaceVisionService>();
 builder.Services.AddHttpClient<GroqChatService>();
@@ -85,32 +96,45 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(c =>
 {
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Type = SecuritySchemeType.Http,
         Scheme = "Bearer",
         BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Введите токен JWT с префиксом Bearer"
+        In = ParameterLocation.Header,
+        Description = "Введите токен JWT"
     });
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
+
+    // 👇 НОВАЯ сигнатура
+    c.EnableAnnotations(
+        enableAnnotationsForInheritance: false,
+        enableAnnotationsForPolymorphism: false
+    );
 });
+
 
 var app = builder.Build();
 
@@ -119,6 +143,8 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();
