@@ -1,76 +1,111 @@
 using WildNatureExplorer.Application.Interfaces.Services;
 using WildNatureExplorer.Domain.Entities;
 using WildNatureExplorer.Infrastructure.Data;
+using WildNatureExplorer.Application.DTOs.AI;
+using System.Text.RegularExpressions;
 
-namespace WildNatureExplorer.Infrastructure.Services;
-
-public class AiService : IAiService
+namespace WildNatureExplorer.Infrastructure.Services
 {
-    private readonly AppDbContext _db;
-    private readonly HuggingFaceVisionService _vision;
-    private readonly GroqChatService _chat;
-
-    public AiService(
-        AppDbContext db,
-        HuggingFaceVisionService vision,
-        GroqChatService chat)
+    public class AiService : IAiService
     {
-        _db = db;
-        _vision = vision;
-        _chat = chat;
-    }
+        private readonly AppDbContext _db;
+        private readonly HuggingFaceVisionService _vision;
+        private readonly GroqChatService _chat;
 
-    public async Task<Guid> AnalyzeImageAsync(Guid userId, byte[] imageBytes)
-    {
-        var animal = await _vision.RecognizeAnimalAsync(imageBytes);
-
-        var session = new AiSession
+        public AiService(
+            AppDbContext db,
+            HuggingFaceVisionService vision,
+            GroqChatService chat)
         {
-            UserId = userId,
-            AnimalName = animal,
-            ImageUrl = "uploaded-image"
-        };
+            _db = db;
+            _vision = vision;
+            _chat = chat;
+        }
 
-        _db.AiSessions.Add(session);
-        await _db.SaveChangesAsync();
-
-        var info = await _chat.AskAsync(
-            $"Describe {animal}: danger level, habitat, rarity."
-        );
-
-        _db.AiMessages.Add(new AiMessage
+        public async Task<Guid> AnalyzeImageAsync(Guid userId, byte[] imageBytes)
         {
-            SessionId = session.Id,
-            Role = "AI",
-            Content = info
-        });
+            var session = await AnalyzeImageStructuredAsync(userId, imageBytes);
+            return session.SessionId;
+        }
 
-        await _db.SaveChangesAsync();
-        return session.Id;
-    }
-
-    public async Task<string> AskAsync(Guid sessionId, string question)
-    {
-        var answer = await _chat.AskAsync(question);
-
-        _db.AiMessages.AddRange(
-            new AiMessage { SessionId = sessionId, Role = "User", Content = question },
-            new AiMessage { SessionId = sessionId, Role = "AI", Content = answer }
-        );
-
-        await _db.SaveChangesAsync();
-        return answer;
-    }
-
-    public async Task SubmitFeedbackAsync(Guid sessionId, int rating, string? comment)
-    {
-        _db.AiFeedbacks.Add(new AiFeedback
+        public async Task<AnimalAnalysisResponseDto> AnalyzeImageStructuredAsync(Guid userId, byte[] imageBytes)
         {
-            SessionId = sessionId,
-            Rating = rating,
-            Comment = comment
-        });
+            var animalName = await _vision.RecognizeAnimalAsync(imageBytes);
 
-        await _db.SaveChangesAsync();
+            var session = new AiSession
+            {
+                UserId = userId,
+                AnimalName = animalName,
+                ImageUrl = "uploaded-image"
+            };
+            _db.AiSessions.Add(session);
+            await _db.SaveChangesAsync();
+
+            var response = await _chat.AskStructuredAsync($"Describe {animalName}: danger level, habitat, rarity.");
+
+            response.Animal.Name = animalName;
+            ParseAnimalFields(response.Animal);
+
+            _db.AiMessages.Add(new AiMessage
+            {
+                SessionId = session.Id,
+                Role = "AI",
+                Content = response.Animal.Description
+            });
+            await _db.SaveChangesAsync();
+
+            response.SessionId = session.Id;
+            return response;
+        }
+
+        public async Task<ChatResponseDto> AskAsync(Guid sessionId, string question)
+        {
+            var response = await _chat.AskChatAsync(question);
+
+            _db.AiMessages.AddRange(
+                new AiMessage { SessionId = sessionId, Role = "User", Content = question },
+                new AiMessage { SessionId = sessionId, Role = "AI", Content = response.Answer }
+            );
+            await _db.SaveChangesAsync();
+
+            return response;
+        }
+
+        public async Task SubmitFeedbackAsync(Guid sessionId, int rating, string? comment)
+        {
+            _db.AiFeedbacks.Add(new AiFeedback
+            {
+                SessionId = sessionId,
+                Rating = rating,
+                Comment = comment
+            });
+
+            await _db.SaveChangesAsync();
+        }
+
+        private void ParseAnimalFields(AnimalInfoDto animal)
+        {
+            var text = animal.Description;
+
+            var habitatMatch = Regex.Match(text, @"- \**Habitat\**:\s*(.*?)(?:\n|$)", RegexOptions.IgnoreCase);
+            var dangerMatch = Regex.Match(text, @"- \**Danger Level\**:\s*(.*?)(?:\n|$)", RegexOptions.IgnoreCase);
+            var rarityMatch = Regex.Match(text, @"- \**Rarity\**:\s*(.*?)(?:\n|$)", RegexOptions.IgnoreCase);
+
+            if (habitatMatch.Success)
+                animal.Habitat = habitatMatch.Groups[1].Value.Trim();
+            if (dangerMatch.Success)
+                animal.DangerLevel = dangerMatch.Groups[1].Value.Trim();
+            if (rarityMatch.Success)
+                animal.RarityLevel = rarityMatch.Groups[1].Value.Trim();
+
+            text = text.Replace("**", "");
+            text = Regex.Replace(text, @"\n{2,}", "\n");
+
+            text = Regex.Replace(text, @"- Habitat:.*(\n|$)", "", RegexOptions.IgnoreCase);
+            text = Regex.Replace(text, @"- Danger Level:.*(\n|$)", "", RegexOptions.IgnoreCase);
+            text = Regex.Replace(text, @"- Rarity:.*(\n|$)", "", RegexOptions.IgnoreCase);
+
+            animal.Description = text.Trim();
+        }
     }
 }

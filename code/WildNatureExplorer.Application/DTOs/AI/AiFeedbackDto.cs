@@ -1,7 +1,8 @@
-namespace WildNatureExplorer.Application.DTOs.AI;
-
-public class AiFeedbackDto
+namespace WildNatureExplorer.Application.DTOs.AI
 {
-    public int Rating { get; set; }
-    public string? Comment { get; set; }
+    public class AiFeedbackDto
+    {
+        public int Rating { get; set; }
+        public string? Comment { get; set; }
+    }
 }

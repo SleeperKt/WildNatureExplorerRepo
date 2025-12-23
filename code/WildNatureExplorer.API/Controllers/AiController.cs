@@ -25,15 +25,15 @@ public class AiController : ControllerBase
         await image.CopyToAsync(ms);
 
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var sessionId = await _ai.AnalyzeImageAsync(userId, ms.ToArray());
+        var result = await _ai.AnalyzeImageStructuredAsync(userId, ms.ToArray());
 
-        return Ok(new { sessionId });
+        return Ok(result);
     }
 
     [HttpPost("ask/{sessionId}")]
-    public async Task<IActionResult> Ask(Guid sessionId, [FromBody] string question)
+    public async Task<IActionResult> Ask(Guid sessionId, [FromBody] AiQuestionDto dto)
     {
-        var answer = await _ai.AskAsync(sessionId, question);
+        var answer = await _ai.AskAsync(sessionId, dto.QuestionAboutNature);
         return Ok(answer);
     }
 
