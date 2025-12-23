@@ -239,12 +239,12 @@ jobs:
           echo "Host=$DB_HOST;Port=$DB_PORT;Database=$DB_NAME;Username=$DB_USER;Password=***"
 
       - name: Apply EF migrations to Azure DB
-        env:
-          ConnectionStrings__DefaultConnection: Host=${{ secrets.DB_HOST }};Port=${{ secrets.DB_PORT }};Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }}
         run: |
           dotnet ef database update \
             --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
-            --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+            --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+            --connection "Host=${{ secrets.DB_HOST }};Port=${{ secrets.DB_PORT }};Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }};SSL Mode=Require;Trust Server Certificate=true"
+
   
       - name: List applied migrations
         run: |
