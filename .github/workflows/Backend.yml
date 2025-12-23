@@ -277,22 +277,31 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Set Azure App Service settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: wild-nature-explorer-web-app
+          app-settings-json: |
+            [
+              { "name": "Jwt__Key", "value": "${{ secrets.JWT_KEY }}" },
+              { "name": "Jwt__Issuer", "value": "${{ secrets.JWT_ISSUER }}" },
+              { "name": "Jwt__Audience", "value": "${{ secrets.JWT_AUDIENCE }}" },
+      
+              { "name": "DB_HOST", "value": "${{ secrets.DB_HOST }}" },
+              { "name": "DB_PORT", "value": "${{ secrets.DB_PORT }}" },
+              { "name": "DB_USER", "value": "${{ secrets.DB_USER }}" },
+              { "name": "DB_PASSWORD", "value": "${{ secrets.DB_PASSWORD }}" },
+              { "name": "DB_NAME", "value": "${{ secrets.DB_NAME }}" },
+      
+              { "name": "GROQ_API_KEY", "value": "${{ secrets.GROQ_API_KEY }}" },
+              { "name": "HF_API_KEY", "value": "${{ secrets.HF_API_KEY }}" },
+      
+              { "name": "AZURE_STORAGE_ACCOUNT", "value": "${{ secrets.AZURE_STORAGE_ACCOUNT }}" },
+              { "name": "AZURE_STORAGE_KEY", "value": "${{ secrets.AZURE_STORAGE_KEY }}" }
+            ]
       - name: Deploy to Azure Web App (Container)
         uses: azure/webapps-deploy@v2
         with:
           app-name: "wild-nature-explorer-web-app"
           images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest"
-          configuration-settings: |
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            JWT_ISSUER=${{ secrets.JWT_ISSUER }}
-            JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}
-            GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
-            HF_API_KEY=${{ secrets.HF_API_KEY }}
-            JWT_KEY=${{ secrets.JWT_KEY }}
-            AZURE_STORAGE_ACCOUNT=${{ secrets.AZURE_STORAGE_ACCOUNT }}
-            AZURE_STORAGE_KEY=${{ secrets.AZURE_STORAGE_KEY }}
 
