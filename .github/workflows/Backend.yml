@@ -233,6 +233,10 @@ jobs:
       - name: Show effective connection string (masked)
         run: |
           echo "$ConnectionStrings__DefaultConnection"
+          
+      - name: Show connection string (masked)
+        run: |
+          echo "Host=$DB_HOST;Port=$DB_PORT;Database=$DB_NAME;Username=$DB_USER;Password=***"
 
       - name: Apply EF migrations to Azure DB
         env:
