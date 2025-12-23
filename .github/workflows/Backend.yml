@@ -224,7 +224,12 @@ jobs:
   
       - name: Restore dependencies
         run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
-  
+      - name: Show effective connection string (masked)
+        run: |
+          echo "$ConnectionStrings__DefaultConnection" \
+            | sed -E 's/Host=[^;]+/Host=***MASKED***/g' \
+            | sed -E 's/Password=[^;]+/Password=***MASKED***/g'
+
       - name: Apply EF migrations to Azure DB
         env:
           ConnectionStrings__DefaultConnection: Host=${{ secrets.DB_HOST }};Port=${{ secrets.DB_PORT }};Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }}
