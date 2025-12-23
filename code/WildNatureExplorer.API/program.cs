@@ -43,9 +43,9 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "super_secret_key_123!";
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "WildNatureExplorer";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "WildNatureExplorerUsers";
+var jwtKey = builder.Configuration["Jwt:Key"];
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
