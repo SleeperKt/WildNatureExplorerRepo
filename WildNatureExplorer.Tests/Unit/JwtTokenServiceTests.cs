@@ -14,9 +14,9 @@ namespace WildNatureExplorer.Tests.Unit
         {
             var inMemorySettings = new Dictionary<string, string>
             {
-                {"Jwt:Key", "K4t5h9wL8fJ2qP1vZ3yX8rQ0sM7bN6pD"},
-                {"Jwt:Issuer", "TestIssuer"},
-                {"Jwt:Audience", "TestAudience"}
+                {"JWT_KEY", "K4t5h9wL8fJ2qP1vZ3yX8rQ0sM7bN6pD"},
+                {"JWT_ISSUER", "TestIssuer"},
+                {"JWT_AUDIENCE", "TestAudience"}
             };
 
             IConfiguration configuration = new ConfigurationBuilder()
