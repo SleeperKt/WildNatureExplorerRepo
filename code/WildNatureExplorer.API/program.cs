@@ -20,14 +20,30 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
+static string Require(IConfiguration config, string key)
+{
+    return config[key]
+        ?? throw new InvalidOperationException($"Configuration value '{key}' is missing");
+}
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
-var connectionString = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};" +
-                       $"Port={Environment.GetEnvironmentVariable("DB_PORT")};" +
-                       $"Database={Environment.GetEnvironmentVariable("DB_NAME")};" +
-                       $"Username={Environment.GetEnvironmentVariable("DB_USER")};" +
-                       $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")}";
+var dbHost = Require(builder.Configuration, "DB_HOST");
+var dbPort = Require(builder.Configuration, "DB_PORT");
+var dbName = Require(builder.Configuration, "DB_NAME");
+var dbUser = Require(builder.Configuration, "DB_USER");
+var dbPassword = Require(builder.Configuration, "DB_PASSWORD");
+var jwtKey = Require(builder.Configuration["Jwt:Key"]);
+var jwtIssuer = Require(builder.Configuration["Jwt:Issuer"]);
+var jwtAudience = Require(builder.Configuration["Jwt:Audience"]);
+
+var connectionString =
+    $"Host={dbHost};" +
+    $"Port={dbPort};" +
+    $"Database={dbName};" +
+    $"Username={dbUser};" +
+    $"Password={dbPassword}";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -42,10 +58,6 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRoleRepository, RoleRepository>();
-
-var jwtKey = builder.Configuration["Jwt:Key"];
-var jwtIssuer = builder.Configuration["Jwt:Issuer"];
-var jwtAudience = builder.Configuration["Jwt:Audience"];
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
