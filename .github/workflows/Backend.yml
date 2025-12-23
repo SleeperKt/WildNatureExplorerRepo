@@ -105,7 +105,10 @@ jobs:
       DB_NAME: wild_nature_explorer
       DB_USER: postgres
       DB_PASSWORD: postgres
-  
+      JWT_KEY: l48z29KIqrcRDf6rrqotkwJsqiWz6IqiQr3Lo0QSS6O
+      JWT_ISSUER: ExampleIssuer
+      JWT_AUDIENCE: ExampleUsers
+      
     services:
       postgres:
         image: postgres:15
