@@ -34,9 +34,13 @@ var dbPort = Require(builder.Configuration, "DB_PORT");
 var dbName = Require(builder.Configuration, "DB_NAME");
 var dbUser = Require(builder.Configuration, "DB_USER");
 var dbPassword = Require(builder.Configuration, "DB_PASSWORD");
-var jwtKey = Require(builder.Configuration["Jwt:Key"]);
-var jwtIssuer = Require(builder.Configuration["Jwt:Issuer"]);
-var jwtAudience = Require(builder.Configuration["Jwt:Audience"]);
+
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("Jwt:Key is not configured");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"]
+    ?? throw new InvalidOperationException("Jwt:Issuer is not configured");
+var jwtAudience = builder.Configuration["Jwt:Audience"]
+    ?? throw new InvalidOperationException("Jwt:Audience is not configured");
 
 var connectionString =
     $"Host={dbHost};" +
