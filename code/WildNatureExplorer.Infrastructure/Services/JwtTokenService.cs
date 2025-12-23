@@ -18,7 +18,7 @@ public class JwtTokenService : IJwtTokenService
 
     public string GenerateToken(Guid userId, string email)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT_KEY"]);
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -28,8 +28,8 @@ public class JwtTokenService : IJwtTokenService
         };
 
         var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
+            issuer: _configuration["JWT_ISSUER"],
+            audience: _configuration["JWT_AUDIENCE"],
             claims: claims,
             expires: DateTime.UtcNow.AddHours(1),
             signingCredentials: creds
