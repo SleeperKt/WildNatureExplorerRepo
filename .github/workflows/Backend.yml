@@ -28,19 +28,37 @@ on:
         default: true
         type: boolean
     secrets:
-      DB_USER:
+      JWT_KEY:
         required: true
-      DB_PASSWORD:
+      JWT_ISSUER:
         required: true
-      DB_NAME:
+      JWT_AUDIENCE:
         required: true
-      JWT_SECRET:
+      GROQ_API_KEY:
+        required: true
+      HF_API_KEY:
         required: true
       DOCKERHUB_USERNAME:
         required: true
       DOCKERHUB_TOKEN:
         required: true
-
+      AZURE_CREDENTIALS:
+        required: true
+      AZURE_STORAGE_ACCOUNT:
+        required: true
+      AZURE_STORAGE_KEY:
+        required: true
+      DB_HOST:
+        required: true
+      DB_PORT:
+        required: true
+      DB_NAME:
+        required: true
+      DB_USER:
+        required: true
+      DB_PASSWORD:
+        required: true
+      
 jobs:
   build:
     name: Build
@@ -84,17 +102,17 @@ jobs:
     env:
       DB_HOST: localhost
       DB_PORT: 5432
-      DB_NAME: ${{ secrets.DB_NAME }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: wild_nature_explorer
+      DB_USER: postgres
+      DB_PASSWORD: postgres
   
     services:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: ${{ secrets.DB_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.DB_NAME }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: wild_nature_explorer
         ports:
           - 5432:5432
         options: >-
@@ -150,7 +168,7 @@ jobs:
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_NAME: ${{ secrets.DB_NAME }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
@@ -169,7 +187,7 @@ jobs:
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_NAME: ${{ secrets.DB_NAME }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
@@ -178,6 +196,48 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Run integration tests
         run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --filter "Category=Integration"
+
+  azure-db-migrations:
+    name: Apply Migrations to Azure DB
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    if: ${{ inputs.SKIP_DEPLOY != true }}
+    env:
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+  
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+  
+      - name: Install dotnet-ef
+        run: |
+          dotnet tool install --global dotnet-ef --version 8.*
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+  
+      - name: Restore dependencies
+        run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+  
+      - name: Apply EF migrations to Azure DB
+        env:
+          ConnectionStrings__DefaultConnection: Host=${{ secrets.DB_HOST }};Port=${{ secrets.DB_PORT }};Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }}
+        run: |
+          dotnet ef database update \
+            --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+            --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+  
+      - name: List applied migrations
+        run: |
+          dotnet ef migrations list \
+            --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+            --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
 
   docker-build:
     name: Docker Build & Push
@@ -206,16 +266,33 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:${{ github.sha }}
 
-
   deploy:
-    name: Deploy
+    name: Deploy to Azure Web App
     runs-on: ubuntu-latest
     needs: [docker-build]
     if: ${{ inputs.SKIP_DEPLOY != true }}
-    env:
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
-      - name: Deploy placeholder
-        run: echo "Deploy app to Azure / Kubernetes here"
-      - name: Healthcheck
-        run: echo "Run healthcheck after deploy"
+      - uses: actions/checkout@v4
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Deploy to Azure Web App (Container)
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: "wild-nature-explorer-web-app"
+          images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest"
+          configuration-settings: |
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            JWT_ISSUER=${{ secrets.JWT_ISSUER }}
+            JWT_AUDIENCE=${{ secrets.JWT_AUDIENCE }}
+            GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
+            HF_API_KEY=${{ secrets.HF_API_KEY }}
+            JWT_KEY=${{ secrets.JWT_KEY }}
+            AZURE_STORAGE_ACCOUNT=${{ secrets.AZURE_STORAGE_ACCOUNT }}
+            AZURE_STORAGE_KEY=${{ secrets.AZURE_STORAGE_KEY }}
+
