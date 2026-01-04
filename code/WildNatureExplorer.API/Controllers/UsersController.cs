@@ -23,9 +23,17 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> GetMe()
     {
         var user = await _userService.GetUserAsync(GetUserId());
-        if (user == null) return NotFound();
-        return Ok(user);
+        if (user == null) return NotFound(new { message = "User not found" });
+
+        var response = new UpdateUserDto(
+            FirstName: user.FirstName,
+            LastName: user.LastName,
+            Email: user.Email
+        );
+
+        return Ok(response);
     }
+
 
     [HttpPut("me")]
     public async Task<IActionResult> UpdateProfile(UpdateUserDto request)
