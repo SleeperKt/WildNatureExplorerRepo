@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 namespace WildNatureExplorer.Application.DTOs.Users;
 
 public record UpdateUserDto(
-
     [Required]
     [Description("First name, Example = Alex")]
     string FirstName,
