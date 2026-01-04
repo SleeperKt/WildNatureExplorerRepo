@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 namespace WildNatureExplorer.Application.DTOs.Auth;
 
 public record RegisterUserDto(
-    
     [Required]
     [Description("User Email, Example = alex2022@example.com")]
     string Email,
