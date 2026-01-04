@@ -7,6 +7,7 @@ namespace WildNatureExplorer.Application.DTOs.AI
     {
         [Required]
         [Description("Question for the Ai assistant, Example = What is the largest animal in the world?")]   
+        
         public string? QuestionAboutNature { get; set; }
     }
 }
