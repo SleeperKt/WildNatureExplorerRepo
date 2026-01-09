@@ -39,14 +39,12 @@ namespace WildNatureExplorer.Infrastructure.Services
             var json = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(json);
 
-            // Извлекаем контент AI
             var content = doc.RootElement
                 .GetProperty("choices")[0]
                 .GetProperty("message")
                 .GetProperty("content")
                 .GetString() ?? string.Empty;
 
-            // Извлекаем usage
             var usageElement = doc.RootElement.GetProperty("usage");
             var usage = new UsageDto
             {

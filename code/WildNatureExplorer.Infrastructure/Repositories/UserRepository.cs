@@ -26,6 +26,12 @@ public class UserRepository : IUserRepository
             .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Email == email);
 
+    public async Task<List<User>> GetAllAsync()
+        => await _context.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .ToListAsync();
+
     public async Task AddAsync(User user)
     {
         _context.Users.Add(user);

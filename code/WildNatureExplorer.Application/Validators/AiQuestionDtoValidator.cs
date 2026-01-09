@@ -1,7 +1,7 @@
 using FluentValidation;
 using WildNatureExplorer.Application.DTOs.AI;
 
-namespace WildNatureExplorer.API.Validators
+namespace WildNatureExplorer.Application.Validators
 {
     public class AiQuestionDtoValidator : AbstractValidator<AiQuestionDto>
     {

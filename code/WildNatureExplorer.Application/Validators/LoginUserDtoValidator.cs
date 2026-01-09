@@ -1,7 +1,7 @@
 using FluentValidation;
 using WildNatureExplorer.Application.DTOs.Auth;
 
-namespace WildNatureExplorer.API.Validators
+namespace WildNatureExplorer.Application.Validators
 {
     public class LoginUserDtoValidator : AbstractValidator<LoginUserDto>
     {
