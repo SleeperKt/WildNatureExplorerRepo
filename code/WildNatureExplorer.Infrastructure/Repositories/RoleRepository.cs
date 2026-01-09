@@ -19,4 +19,23 @@ public class RoleRepository : IRoleRepository
 
     public async Task<Role?> GetByIdAsync(Guid id)
         => await _context.Roles.FindAsync(id);
+
+    public async Task AddAsync(Role role)
+    {
+        _context.Roles.Add(role);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Role>> GetRolesByUserIdAsync(Guid userId)
+    {
+        return await _context.UserRoles
+            .Where(ur => ur.UserId == userId)
+            .Join(
+                _context.Roles,
+                ur => ur.RoleId,
+                r => r.Id,
+                (ur, r) => r
+            )
+            .ToListAsync();
+    }
 }

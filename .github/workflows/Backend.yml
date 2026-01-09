@@ -58,7 +58,9 @@ on:
         required: true
       DB_PASSWORD:
         required: true
-      
+      ADMIN_EMAIL: 
+        required: true
+
 jobs:
   build:
     name: Build
@@ -308,7 +310,7 @@ jobs:
       
               { "name": "GROQ_API_KEY", "value": "${{ secrets.GROQ_API_KEY }}" },
               { "name": "HF_API_KEY", "value": "${{ secrets.HF_API_KEY }}" },
-      
+              { "name": "ADMIN_EMAIL", "value": "${{ secrets.ADMIN_EMAIL }}" },
               { "name": "AZURE_STORAGE_ACCOUNT", "value": "${{ secrets.AZURE_STORAGE_ACCOUNT }}" },
               { "name": "AZURE_STORAGE_KEY", "value": "${{ secrets.AZURE_STORAGE_KEY }}" }
             ]

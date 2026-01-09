@@ -2,7 +2,7 @@ using FluentValidation;
 using WildNatureExplorer.Application.DTOs.Users;
 using WildNatureExplorer.Application.Interfaces.Services;
 
-namespace WildNatureExplorer.API.Validators
+namespace WildNatureExplorer.Application.Validators
 {
     public class UpdateUserDtoValidator : AbstractValidator<UpdateUserDto>
     {

@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace WildNatureExplorer.Application.DTOs.AI
 {
     public class ChatResponseDto

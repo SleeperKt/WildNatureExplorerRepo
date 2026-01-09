@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Xunit;
 using Microsoft.Extensions.Configuration;
 using WildNatureExplorer.Infrastructure.Services;
+using WildNatureExplorer.Domain.Entities;
 
 namespace WildNatureExplorer.Tests.Unit
 {
@@ -23,8 +24,9 @@ namespace WildNatureExplorer.Tests.Unit
                 .AddInMemoryCollection(inMemorySettings)
                 .Build();
 
+            var roles = new List<Role>();
             var service = new JwtTokenService(configuration);
-            var token = service.GenerateToken(Guid.NewGuid(), "test@example.com");
+            var token = service.GenerateToken(Guid.NewGuid(), "test@example.com", roles);
 
             Assert.False(string.IsNullOrEmpty(token));
         }

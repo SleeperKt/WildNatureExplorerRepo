@@ -39,7 +39,6 @@ public class HuggingFaceVisionService
         var json = await response.Content.ReadAsStringAsync();
         using var doc = JsonDocument.Parse(json);
 
-        // take the first label (highest score)
         return doc.RootElement[0].GetProperty("label").GetString()!;
     }
 }
