@@ -55,7 +55,6 @@ var dbPort = Require(builder.Configuration, "DB_PORT");
 var dbName = Require(builder.Configuration, "DB_NAME");
 var dbUser = Require(builder.Configuration, "DB_USER");
 var dbPassword = Require(builder.Configuration, "DB_PASSWORD");
-var adminEmail = Require(builder.Configuration, "ADMIN_EMAIL");
 
 var jwtKey = Require(builder.Configuration, "JWT_KEY");
 var jwtIssuer = Require(builder.Configuration, "JWT_ISSUER");
