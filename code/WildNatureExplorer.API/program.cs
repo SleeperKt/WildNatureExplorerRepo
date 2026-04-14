@@ -20,7 +20,6 @@ using System.Reflection;
 using WildNatureExplorer.Application.DTOs.Admin;
 using FluentValidation;
 using WildNatureExplorer.Domain.Entities;
-using WildNatureExplorer.Application.Interfaces.Repositories;
 using System.Security.Claims;
 
 Log.Logger = new LoggerConfiguration()
@@ -42,7 +41,10 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins(
+                "http://localhost:5173",
+                "https://fragile-arrival-viselike.ngrok-free.dev"
+            )
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

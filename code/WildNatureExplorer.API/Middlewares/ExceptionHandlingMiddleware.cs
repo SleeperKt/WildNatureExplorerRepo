@@ -31,9 +31,13 @@ namespace WildNatureExplorer.API.Middlewares
             {
                 await WriteError(context, HttpStatusCode.NotFound, ex.Message);
             }
+            catch (ArgumentNullException ex)
+            {
+                await WriteError(context, HttpStatusCode.BadRequest, "Invalid input: " + ex.ParamName);
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception");
+                _logger.LogError(ex, "Unhandled exception: {ExceptionType}", ex.GetType().Name);
                 await WriteError(context, HttpStatusCode.InternalServerError,
                     "An unexpected error occurred");
             }
@@ -44,6 +48,12 @@ namespace WildNatureExplorer.API.Middlewares
             HttpStatusCode statusCode,
             string message)
         {
+            // Check if response has already started
+            if (context.Response.HasStarted)
+            {
+                return;
+            }
+
             context.Response.StatusCode = (int)statusCode;
             context.Response.ContentType = "application/json";
 
@@ -54,8 +64,16 @@ namespace WildNatureExplorer.API.Middlewares
                 status = (int)statusCode
             };
 
-            await context.Response.WriteAsync(
-                JsonSerializer.Serialize(response));
+            try
+            {
+                await context.Response.WriteAsync(
+                    JsonSerializer.Serialize(response));
+            }
+            catch (Exception ex)
+            {
+                // Log if write fails, but don't throw
+                System.Diagnostics.Debug.WriteLine($"Failed to write error response: {ex.Message}");
+            }
         }
     }
 }

@@ -8,7 +8,6 @@ bin/
 obj/
 out/
 testdocs/
-frontend/
 
 .idea/
 

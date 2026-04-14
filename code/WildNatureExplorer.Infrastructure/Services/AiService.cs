@@ -3,6 +3,7 @@ using WildNatureExplorer.Domain.Entities;
 using WildNatureExplorer.Infrastructure.Data;
 using WildNatureExplorer.Application.DTOs.AI;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace WildNatureExplorer.Infrastructure.Services
 {
@@ -28,18 +29,42 @@ namespace WildNatureExplorer.Infrastructure.Services
             return session.SessionId;
         }
 
-        public async Task<AnimalAnalysisResponseDto> AnalyzeImageStructuredAsync(Guid userId, byte[] imageBytes)
+        public async Task<AnimalAnalysisResponseDto> AnalyzeImageStructuredAsync(Guid userId, byte[] imageBytes, Guid? sessionId = null)
         {
             var animalName = await _vision.RecognizeAnimalAsync(imageBytes);
 
-            var session = new AiSession
+            AiSession session;
+
+            if (sessionId != null && sessionId != Guid.Empty)
             {
-                UserId = userId,
-                AnimalName = animalName,
-                ImageUrl = "uploaded-image"
-            };
-            _db.AiSessions.Add(session);
-            await _db.SaveChangesAsync();
+                var existing = await _db.AiSessions.FindAsync(sessionId.Value);
+                if (existing != null && !existing.IsEnded && existing.UserId == userId)
+                {
+                    session = existing;
+                }
+                else
+                {
+                    session = new AiSession
+                    {
+                        UserId = userId,
+                        AnimalName = animalName,
+                        ImageUrl = "uploaded-image"
+                    };
+                    _db.AiSessions.Add(session);
+                    await _db.SaveChangesAsync();
+                }
+            }
+            else
+            {
+                session = new AiSession
+                {
+                    UserId = userId,
+                    AnimalName = animalName,
+                    ImageUrl = "uploaded-image"
+                };
+                _db.AiSessions.Add(session);
+                await _db.SaveChangesAsync();
+            }
 
             var response = await _chat.AskStructuredAsync($"Describe {animalName}: danger level, habitat, rarity.");
 
@@ -58,17 +83,94 @@ namespace WildNatureExplorer.Infrastructure.Services
             return response;
         }
 
-        public async Task<ChatResponseDto> AskAsync(Guid sessionId, string question)
+        public async Task<ChatResponseDto> AskAsync(Guid userId, Guid? sessionId, string question)
         {
-            var response = await _chat.AskChatAsync(question);
+            Guid actualSessionId;
+
+            // If no session provided, create a new one
+            if (sessionId == null || sessionId == Guid.Empty)
+            {
+                var newSession = new AiSession
+                {
+                    UserId = userId,
+                    AnimalName = "General Question",
+                    ImageUrl = "text-based"
+                };
+                _db.AiSessions.Add(newSession);
+                await _db.SaveChangesAsync();
+                actualSessionId = newSession.Id;
+            }
+            else
+            {
+                // Ensure session exists and belongs to user and is not ended
+                var existing = await _db.AiSessions.FindAsync(sessionId.Value);
+                if (existing == null || existing.IsEnded || existing.UserId != userId)
+                {
+                    // create a fresh session instead
+                    var newSession = new AiSession
+                    {
+                        UserId = userId,
+                        AnimalName = "General Question",
+                        ImageUrl = "text-based"
+                    };
+                    _db.AiSessions.Add(newSession);
+                    await _db.SaveChangesAsync();
+                    actualSessionId = newSession.Id;
+                }
+                else
+                {
+                    actualSessionId = sessionId.Value;
+                }
+            }
+
+            // Get conversation history for context
+            var messages = await _db.AiMessages
+                .Where(m => m.SessionId == actualSessionId)
+                .OrderBy(m => m.Id)
+                .ToListAsync();
+
+            // Build conversation context
+            var conversationHistory = string.Join("\n", 
+                messages.Select(m => $"{m.Role}: {m.Content}"));
+
+            var fullContext = string.IsNullOrEmpty(conversationHistory) 
+                ? question 
+                : $"{conversationHistory}\nUser: {question}";
+
+            var response = await _chat.AskChatAsync(fullContext);
 
             _db.AiMessages.AddRange(
-                new AiMessage { SessionId = sessionId, Role = "User", Content = question },
-                new AiMessage { SessionId = sessionId, Role = "AI", Content = response.Answer }
+                new AiMessage { SessionId = actualSessionId, Role = "User", Content = question },
+                new AiMessage { SessionId = actualSessionId, Role = "AI", Content = response.Answer }
             );
             await _db.SaveChangesAsync();
 
+            // Add session ID to response
+            response.SessionId = actualSessionId;
             return response;
+        }
+
+        public async Task<Guid> StartSessionAsync(Guid userId, string? initialContext = null)
+        {
+            var session = new AiSession
+            {
+                UserId = userId,
+                AnimalName = string.IsNullOrEmpty(initialContext) ? "General" : initialContext,
+                ImageUrl = "text-based"
+            };
+            _db.AiSessions.Add(session);
+            await _db.SaveChangesAsync();
+            return session.Id;
+        }
+
+        public async Task EndSessionAsync(Guid sessionId)
+        {
+            var session = await _db.AiSessions.FindAsync(sessionId);
+            if (session == null) return;
+            session.IsEnded = true;
+            session.EndedAt = DateTime.UtcNow;
+            _db.AiSessions.Update(session);
+            await _db.SaveChangesAsync();
         }
 
         public async Task SubmitFeedbackAsync(Guid sessionId, int rating, string? comment)
