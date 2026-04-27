@@ -19,13 +19,13 @@ public class AiController : ControllerBase
     }
 
     [HttpPost("analyze/{sessionId}")]
-    public async Task<IActionResult> Analyze(Guid sessionId, IFormFile image)
+    public async Task<IActionResult> Analyze(Guid sessionId, IFormFile image, [FromQuery] string? recognizer = null)
     {
         using var ms = new MemoryStream();
         await image.CopyToAsync(ms);
 
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var result = await _ai.AnalyzeImageStructuredAsync(userId, ms.ToArray(), sessionId);
+        var result = await _ai.AnalyzeImageStructuredAsync(userId, ms.ToArray(), sessionId, recognizer);
 
         return Ok(result);
     }

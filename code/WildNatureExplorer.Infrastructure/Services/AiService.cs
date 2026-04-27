@@ -11,27 +11,30 @@ namespace WildNatureExplorer.Infrastructure.Services
     {
         private readonly AppDbContext _db;
         private readonly HuggingFaceVisionService _vision;
+        private readonly AnimalDetectVisionService _animalDetect;
         private readonly GroqChatService _chat;
 
         public AiService(
             AppDbContext db,
             HuggingFaceVisionService vision,
+            AnimalDetectVisionService animalDetect,
             GroqChatService chat)
         {
             _db = db;
             _vision = vision;
+            _animalDetect = animalDetect;
             _chat = chat;
         }
 
-        public async Task<Guid> AnalyzeImageAsync(Guid userId, byte[] imageBytes)
+        public async Task<Guid> AnalyzeImageAsync(Guid userId, byte[] imageBytes, string? recognizer = null)
         {
-            var session = await AnalyzeImageStructuredAsync(userId, imageBytes);
+            var session = await AnalyzeImageStructuredAsync(userId, imageBytes, recognizer: recognizer);
             return session.SessionId;
         }
 
-        public async Task<AnimalAnalysisResponseDto> AnalyzeImageStructuredAsync(Guid userId, byte[] imageBytes, Guid? sessionId = null)
+        public async Task<AnimalAnalysisResponseDto> AnalyzeImageStructuredAsync(Guid userId, byte[] imageBytes, Guid? sessionId = null, string? recognizer = null)
         {
-            var animalName = await _vision.RecognizeAnimalAsync(imageBytes);
+            var animalName = await RecognizeAnimalAsync(imageBytes, recognizer);
 
             AiSession session;
 
@@ -81,6 +84,18 @@ namespace WildNatureExplorer.Infrastructure.Services
 
             response.SessionId = session.Id;
             return response;
+        }
+
+        private async Task<string> RecognizeAnimalAsync(byte[] imageBytes, string? recognizer)
+        {
+            var selected = (recognizer ?? "huggingface").Trim().ToLowerInvariant();
+
+            return selected switch
+            {
+                "animaldetect" => await _animalDetect.RecognizeAnimalAsync(imageBytes),
+                "huggingface" => await _vision.RecognizeAnimalAsync(imageBytes),
+                _ => throw new ArgumentException("Unsupported recognizer. Use 'huggingface' or 'animaldetect'.", nameof(recognizer))
+            };
         }
 
         public async Task<ChatResponseDto> AskAsync(Guid userId, Guid? sessionId, string question)

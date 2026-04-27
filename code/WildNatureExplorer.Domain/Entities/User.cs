@@ -25,6 +25,9 @@ public class User : Entity
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public bool AcceptedTerms { get; private set; }
+    public DateTime? AcceptedTermsAt { get; private set; }
+    public string? TermsVersion { get; private set; }
     public string Email { get; private set; } = null!;
     public string PasswordHash { get; private set; } = null!;
     public string FirstName { get; private set; } = null!;
@@ -55,5 +58,12 @@ public class User : Entity
         LastName = lastName;
         Email = email;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void AcceptTerms(string version)
+    {
+        AcceptedTerms = true;
+        AcceptedTermsAt = DateTime.UtcNow;
+        TermsVersion = version;
     }
 }

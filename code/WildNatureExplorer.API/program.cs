@@ -21,6 +21,7 @@ using WildNatureExplorer.Application.DTOs.Admin;
 using FluentValidation;
 using WildNatureExplorer.Domain.Entities;
 using System.Security.Claims;
+using WildNatureExplorer.Application.Common;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -46,7 +47,8 @@ builder.Services.AddCors(options =>
                 "https://fragile-arrival-viselike.ngrok-free.dev"
             )
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -77,6 +79,7 @@ builder.Services.AddFluentValidationAutoValidation();
 
 builder.Services.AddScoped<IAiService, AiService>();
 builder.Services.AddHttpClient<HuggingFaceVisionService>();
+builder.Services.AddHttpClient<AnimalDetectVisionService>();
 builder.Services.AddHttpClient<GroqChatService>();
 
 builder.Services.AddScoped<IUserService, UserService>();
@@ -183,15 +186,21 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.UseCors();
+app.UseHttpsRedirection();
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseRouting();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseHttpsRedirection();
+app.UseCors(); // или "DevCors"
+
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapControllers();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<TermsMiddleware>();
+
 app.MapGet("/health", () => Results.Ok());
+app.MapControllers();
+
 app.Run();

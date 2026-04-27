@@ -5,7 +5,7 @@ import axios from "axios";
 // });
 
 export const api = axios.create({
-  baseURL: "",
+  baseURL: "https://brain-heated-santa-latest.trycloudflare.com",
 });
 
 api.interceptors.request.use((config) => {

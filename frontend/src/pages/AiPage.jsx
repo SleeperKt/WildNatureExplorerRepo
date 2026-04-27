@@ -53,6 +53,7 @@ export default function AiPage() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isAsking, setIsAsking] = useState(false);
+  const [recognizer, setRecognizer] = useState("huggingface");
   const [birds, setBirds] = useState([]);
   const [clouds, setClouds] = useState([]);
 
@@ -228,7 +229,7 @@ export default function AiPage() {
     form.append("image", file);
 
     try {
-      const res = await api.post(`/api/ai/analyze/${sessionId}`, form);
+      const res = await api.post(`/api/ai/analyze/${sessionId}?recognizer=${encodeURIComponent(recognizer)}`, form);
       const newSessionId = res.data.sessionId;
       if (!sessionId) setSessionId(newSessionId);
       
@@ -416,6 +417,17 @@ export default function AiPage() {
             )}
 
             {/* Drop Zone */}
+            <label className="ai-label" htmlFor="recognizer-select">Recognition Model</label>
+            <select
+              id="recognizer-select"
+              className="ai-textarea"
+              value={recognizer}
+              onChange={(e) => setRecognizer(e.target.value)}
+            >
+              <option value="huggingface">Hugging Face</option>
+              <option value="animaldetect">AnimalDetect</option>
+            </select>
+
             <div 
               className={`ai-dropzone ${isDragOver ? 'drag-over' : ''} ${file ? 'has-file' : ''}`}
               onDragOver={handleDragOver}

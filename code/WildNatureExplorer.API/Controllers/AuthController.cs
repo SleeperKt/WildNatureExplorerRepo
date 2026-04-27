@@ -24,7 +24,20 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginUserDto request)
     {
-        var token = await _authService.LoginAsync(request);
-        return Ok(new { token });
+        var result = await _authService.LoginAsync(request);
+        return Ok(result);
+    }
+
+    [HttpPost("accept-terms")]
+    public async Task<IActionResult> AcceptTerms()
+    {
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(userId, out var guid))
+            return Unauthorized();
+
+        await _authService.AcceptTermsAsync(guid);
+
+        return Ok();
     }
 }

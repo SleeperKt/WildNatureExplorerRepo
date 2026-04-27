@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { api } from "../api/client";
+import { termsText } from "../content/terms";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -15,7 +16,9 @@ export default function LoginPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
+  const [showTerms, setShowTerms] = useState(false);
+  const [pendingToken, setPendingToken] = useState(null);
+  
   // Update mode from URL
   useEffect(() => {
     setIsRegister(searchParams.get("mode") === "register");
@@ -30,13 +33,26 @@ export default function LoginPage() {
     setError("");
     try {
       const res = await api.post("/api/auth/login", { email, password });
-      localStorage.setItem("token", res.data.token);
+      console.log("LOGIN RESPONSE:", res.data); // ← ВОТ СЮДА
+
+      const token = res.data.token;
+      console.log("LOGIN RESPONSE:", res.data);
+
+      if (!res.data.acceptedTerms) {
+        setPendingToken(token);
+        setShowTerms(true);
+        setIsLoading(false); // ← ВАЖНО
+        return;
+      }
+
+      // если уже приняты → логиним сразу
+      localStorage.setItem("token", token);
       navigate("/");
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+      } catch (err) {
+        setError(err.response?.data?.message || "Login failed. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
   };
 
   const register = async () => {
@@ -308,6 +324,52 @@ export default function LoginPage() {
           By continuing, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
         </p>
       </div>
+        {showTerms && (
+        <div className="terms-modal-overlay">
+          <div className="terms-modal-box">
+
+            <h2 className="terms-modal-title">
+              Terms of Service
+            </h2>
+
+            <div className="terms-modal-content">
+              {termsText}
+            </div>
+
+            <button
+              className="terms-modal-button"
+              onClick={() => console.log("CLICKED")}
+              onClick={async () => {
+              try {
+                await api.post(
+                  "/api/auth/accept-terms",
+                  {},
+                  {
+                    headers: {
+                      Authorization: `Bearer ${pendingToken}`,
+                    },
+                  }
+                );
+
+                localStorage.setItem("token", pendingToken);
+                navigate("/");
+              } catch (err) {
+                console.error("ACCEPT TERMS FAILED:", err.response?.data || err.message);
+                setError("Failed to accept terms. Please try again.");
+              } finally {
+                // 👇 ВСЕГДА закрываем модалку
+                setShowTerms(false);
+                setPendingToken(null);
+                setIsLoading(false);
+              }
+            }}
+            >
+              Accept & Continue
+            </button>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
