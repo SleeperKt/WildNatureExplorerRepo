@@ -2,6 +2,7 @@ using WildNatureExplorer.Application.DTOs.Users;
 using WildNatureExplorer.Application.Interfaces.Repositories;
 using WildNatureExplorer.Application.Interfaces.Services;
 using WildNatureExplorer.Domain.Entities;
+using WildNatureExplorer.Application.Common;
 
 namespace WildNatureExplorer.Application.Services;
 
@@ -33,15 +34,15 @@ public class AdminService : IAdminService
     {
         var admin = await _userRepository.GetByIdAsync(adminId);
         if (admin == null || !admin.UserRoles.Any(ur => ur.Role.RoleName == "Admin"))
-            throw new Exception("Only Admin can assign Moderator role.");
+            throw new UnauthorizedAccessException("Only Admin can assign Moderator role.");
 
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
-            throw new Exception("User not found.");
+            throw new ResourceNotFoundException("User", userId.ToString());
 
         var moderatorRole = await _roleRepository.GetByNameAsync("Moderator");
         if (moderatorRole == null)
-            throw new Exception("Moderator role not found in database.");
+            throw new ResourceNotFoundException("Role", "Moderator");
 
         user.AddRole(moderatorRole);
         await _userRepository.UpdateAsync(user);

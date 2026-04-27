@@ -14,7 +14,7 @@ public class AuthService : IAuthService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IRoleRepository _roleRepository;
-    private readonly string _adminEmail;
+    private readonly string? _adminEmail;
 
     public AuthService(
         IUserRepository userRepository,
@@ -33,7 +33,7 @@ public class AuthService : IAuthService
     public async Task<UserDto> RegisterAsync(RegisterUserDto registerDto)
     {
         var existingUser = await _userRepository.GetByEmailAsync(registerDto.Email);
-        if (existingUser != null) throw new Exception("Email already in use");
+        if (existingUser != null) throw new ValidationException("Email already in use", "EMAIL_ALREADY_IN_USE");
 
         var passwordHash = _passwordHasher.HashPassword(registerDto.Password);
         var user = new User(Guid.NewGuid(), registerDto.Email, passwordHash, registerDto.FirstName, registerDto.LastName);
@@ -56,7 +56,7 @@ public class AuthService : IAuthService
     {
         var user = await _userRepository.GetByEmailAsync(loginDto.Email);
         if (user == null || !_passwordHasher.VerifyPassword(loginDto.Password, user.PasswordHash))
-            throw new Exception("Invalid email or password");
+            throw new ValidationException("Invalid email or password", "INVALID_CREDENTIALS");
         var roles = await _roleRepository.GetRolesByUserIdAsync(user.Id);
 
         var token = _jwtTokenService.GenerateToken(user.Id, user.Email, roles);
@@ -72,7 +72,7 @@ public class AuthService : IAuthService
     public async Task AssignRoleAsync(User user, string roleName)
     {
         var role = await _roleRepository.GetByNameAsync(roleName);
-        if (role == null) throw new Exception($"Role '{roleName}' not found");
+        if (role == null) throw new ResourceNotFoundException("Role", roleName);
 
         user.AddRole(role);
         await _userRepository.UpdateAsync(user);
@@ -82,7 +82,7 @@ public class AuthService : IAuthService
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
-            throw new Exception("User not found");
+            throw new ResourceNotFoundException("User", userId.ToString());
 
         user.AcceptTerms(Terms.CurrentVersion);
 

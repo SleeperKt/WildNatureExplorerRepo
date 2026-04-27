@@ -16,20 +16,31 @@ public static class AnimalPromptPolicy
 
     public static void Validate(string userPrompt)
     {
+        if (string.IsNullOrWhiteSpace(userPrompt))
+            throw new InvalidOperationException("Prompt cannot be empty. Please ask a question about wildlife or nature.");
+
         var lower = userPrompt.ToLowerInvariant();
 
-        if (ForbiddenKeywords.Any(k => lower.Contains(k)))
-            throw new InvalidOperationException("Prompt violates AI safety policy.");
+        var violatingKeyword = ForbiddenKeywords.FirstOrDefault(k => lower.Contains(k));
+        
+        if (violatingKeyword != null)
+            throw new InvalidOperationException($"Prompt contains forbidden keyword: '{violatingKeyword}'. Please rephrase your question to focus on wildlife education and conservation.");
     }
 
     public static string BuildSystemPrompt()
     {
         return """
-        You are a wildlife expert AI.
-        You only answer questions related to animals, habitats,
-        conservation, danger levels, rarity, and comparisons.
-        You must refuse unrelated topics.
-        Responses must be factual and concise.
+        You are a wildlife expert AI assistant for the Wild Nature Explorer app.
+        You ONLY answer questions related to animals, habitats, conservation, danger levels, rarity, size, diet, behavior, and comparisons.
+        You must refuse any questions about:
+        - Weapons, violence, or illegal activities
+        - Drugs or harmful substances
+        - How to hunt or harm animals
+        - Hacking or unauthorized access
+        
+        For out-of-scope topics, politely redirect to wildlife topics.
+        Responses must be factual, concise, and educational.
+        Focus on interesting facts that would appeal to wildlife enthusiasts.
         """;
     }
 }

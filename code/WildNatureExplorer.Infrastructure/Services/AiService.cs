@@ -2,6 +2,8 @@ using WildNatureExplorer.Application.Interfaces.Services;
 using WildNatureExplorer.Domain.Entities;
 using WildNatureExplorer.Infrastructure.Data;
 using WildNatureExplorer.Application.DTOs.AI;
+using WildNatureExplorer.Application.AI.PromptPolicies;
+using WildNatureExplorer.Application.Common;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 
@@ -100,6 +102,16 @@ namespace WildNatureExplorer.Infrastructure.Services
 
         public async Task<ChatResponseDto> AskAsync(Guid userId, Guid? sessionId, string question)
         {
+            // Validate prompt against safety policy
+            try
+            {
+                AnimalPromptPolicy.Validate(question);
+            }
+            catch (InvalidOperationException ex)
+            {
+                throw new SafetyPolicyException(ex.Message);
+            }
+
             Guid actualSessionId;
 
             // If no session provided, create a new one

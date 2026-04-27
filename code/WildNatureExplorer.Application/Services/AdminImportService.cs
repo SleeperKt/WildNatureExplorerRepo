@@ -4,11 +4,9 @@ using CsvHelper.Configuration;
 using WildNatureExplorer.Application.DTOs.Admin;
 using WildNatureExplorer.Application.Interfaces.Repositories;
 using WildNatureExplorer.Application.Interfaces.Services;
+using WildNatureExplorer.Application.Common;
 using WildNatureExplorer.Domain.Entities;
 using System.Text.Json;
-using System.Globalization;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace WildNatureExplorer.Application.Services;
 
@@ -41,7 +39,7 @@ public class AdminImportService : IAdminImportService
     {
         var existing = await _speciesRepository.SearchNamesAsync(dto.CommonName);
         if (existing.Contains(dto.CommonName))
-            throw new Exception($"Species {dto.CommonName} already exists.");
+            throw new Common.ValidationException($"Species '{dto.CommonName}' already exists.", "SPECIES_ALREADY_EXISTS");
 
         var species = await MapDtoToSpeciesAsync(dto);
         await _speciesRepository.AddAsync(species);
@@ -85,9 +83,9 @@ public class AdminImportService : IAdminImportService
         foreach (var record in records)
         {
             if (record.Latitude < -90 || record.Latitude > 90)
-                throw new Exception($"Invalid Latitude: {record.Latitude}");
+                throw new Common.ValidationException($"Invalid Latitude: {record.Latitude}. Valid range is -90 to 90.", "INVALID_LATITUDE");
             if (record.Longitude < -180 || record.Longitude > 180)
-                throw new Exception($"Invalid Longitude: {record.Longitude}");
+                throw new Common.ValidationException($"Invalid Longitude: {record.Longitude}. Valid range is -180 to 180.", "INVALID_LONGITUDE");
 
             var location = new SpeciesLocation
             {
@@ -105,11 +103,11 @@ public class AdminImportService : IAdminImportService
     {
         var species = await _speciesRepository.GetByIdAsync(speciesId);
         if (species == null)
-            throw new Exception("Species not found.");
+            throw new ResourceNotFoundException("Species", speciesId.ToString());
 
         var country = await _countryRepository.GetByIdAsync(countryId);
         if (country == null)
-            throw new Exception("Country not found.");
+            throw new ResourceNotFoundException("Country", countryId.ToString());
 
         var scientificName = species.ScientificName;
         var countryName = country.Name;
