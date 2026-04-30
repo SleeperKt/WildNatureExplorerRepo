@@ -66,6 +66,8 @@ on:
         required: true
       AZURE_WEBAPP_FRONTEND_NAME:
         required: true
+      WNE_FRONTEND_PUBLIC_URL:
+        required: false
 
 jobs:
   backend-build:
@@ -76,15 +78,30 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
 
       - name: Restore dependencies
         run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
 
+      - name: NuGet vulnerability scan
+        run: dotnet list ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj package --vulnerable --include-transitive
+
       - name: Build project
         run: dotnet build ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj --no-restore --configuration Release
+
+      - name: Publish API (artifact)
+        run: dotnet publish ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj --no-restore --configuration Release -o ./publish-api
+
+      - name: Upload API publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wne-api-publish-${{ github.sha }}
+          path: publish-api/
+          retention-days: 14
 
   backend-lint:
     name: Backend — lint
@@ -93,9 +110,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
       - name: Run dotnet format
         run: dotnet format ./WildNatureExplorer.sln --verify-no-changes --verbosity minimal
 
@@ -118,6 +137,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: npm audit
+        run: npm audit --audit-level=moderate
+
       - name: Lint
         run: npm run lint
 
@@ -125,6 +147,13 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.WNE_API_PUBLIC_BASE_URL }}
         run: npm run build
+
+      - name: Upload frontend dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wne-frontend-dist-${{ github.sha }}
+          path: frontend/dist/
+          retention-days: 14
 
   db-setup:
     name: DB setup (CI Postgres + EF)
@@ -161,9 +190,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
 
       - name: Wait for PostgreSQL
         run: |
@@ -205,9 +236,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
       - name: Run unit tests
         run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --filter "Category=Unit"
 
@@ -223,9 +256,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
       - name: Run integration tests
         if: ${{ inputs.RUN_INTEGRATION_TESTS == true }}
         run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --filter "Category=Integration"
@@ -253,9 +288,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
 
       - name: Install dotnet-ef
         run: |
@@ -415,6 +452,27 @@ jobs:
           app-name: ${{ secrets.AZURE_WEBAPP_API_NAME }}
           images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest"
 
+      - name: Verify API health (public URL)
+        run: |
+          set -e
+          BASE="${{ secrets.WNE_API_PUBLIC_BASE_URL }}"
+          BASE="${BASE%/}"
+          echo "Checking ${BASE}/health ..."
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -sf --max-time 25 "${BASE}/health" >/dev/null; then
+              ok=1
+              break
+            fi
+            echo "Attempt ${i}: waiting for API..."
+            sleep 10
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::API health check failed after deploy"
+            exit 1
+          fi
+          echo "API health OK"
+
   deploy-frontend:
     name: Deploy frontend (Azure Web App container)
     runs-on: ubuntu-latest
@@ -444,3 +502,28 @@ jobs:
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_FRONTEND_NAME }}
           images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-web:latest"
+
+      - name: Verify frontend (public URL)
+        env:
+          BASE_URL: ${{ secrets.WNE_FRONTEND_PUBLIC_URL }}
+        run: |
+          if [ -z "${BASE_URL:-}" ]; then
+            echo "WNE_FRONTEND_PUBLIC_URL not set — skipping SPA HTTP check"
+            exit 0
+          fi
+          BASE="${BASE_URL%/}"
+          echo "Checking ${BASE}/ ..."
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -sfL --max-time 25 -o /dev/null "${BASE}/"; then
+              ok=1
+              break
+            fi
+            echo "Attempt ${i}: waiting for frontend..."
+            sleep 10
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::Frontend HTTP check failed after deploy"
+            exit 1
+          fi
+          echo "Frontend OK"

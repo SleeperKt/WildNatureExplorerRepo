@@ -1,18 +1,20 @@
-name: Dev Environment CI/CD
+# Production: same pipeline as dev/test; differs by branch (main), GitHub Environment (prod), and ASPNETCORE_ENVIRONMENT=Production in App Service.
+name: Production CI/CD
+
 on:
   workflow_dispatch:
   push:
     branches:
-      - dev
+      - main
   pull_request:
     branches:
-      - dev
+      - main
 
 jobs:
-  dev-pipeline:
+  prod-pipeline:
     uses: ./.github/workflows/Project.yml
     with:
-      ENVIRONMENT: dev
+      ENVIRONMENT: prod
       SKIP_DB_SETUP: false
       SKIP_DEPLOY: false
       RUN_INTEGRATION_TESTS: true
