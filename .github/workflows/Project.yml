@@ -5,6 +5,11 @@
 # WNE_API_PUBLIC_BASE_URL (HTTPS API origin for Vite build, no trailing slash),
 # CORS_ORIGINS (comma-separated allowed frontend origins, e.g. https://your-frontend.azurewebsites.net),
 # AZURE_WEBAPP_API_NAME, AZURE_WEBAPP_FRONTEND_NAME (Linux container Web App names).
+#
+# workflow_call.inputs.ENVIRONMENT:
+#   • Must match GitHub Environment names if you use deploy protection / env-scoped secrets (Settings → Environments).
+#   • Sets job.environment on deploy jobs (shows in Actions UI, gates approvals).
+#   • Maps to ASPNETCORE_ENVIRONMENT on the API App Service: prod→Production, test→Staging, dev→Development.
 
 name: Backend & Frontend CI/CD
 
@@ -12,7 +17,7 @@ on:
   workflow_call:
     inputs:
       ENVIRONMENT:
-        description: "Deployment environment (dev/test/prod)"
+        description: "GitHub Environment name (dev / test / prod). Used for deploy gates and ASPNETCORE_ENVIRONMENT mapping."
         required: true
         type: string
       SKIP_DB_SETUP:
@@ -344,7 +349,9 @@ jobs:
   deploy-api:
     name: Deploy API (Azure Web App container)
     runs-on: ubuntu-latest
-    needs: [docker-build-api]
+    environment: ${{ inputs.ENVIRONMENT }}
+    # Ensure Azure schema is migrated before pulling a new API container.
+    needs: [docker-build-api, azure-db-migrations]
     if: ${{ inputs.SKIP_DEPLOY != true }}
     steps:
       - uses: actions/checkout@v4
@@ -363,6 +370,7 @@ jobs:
               { "name": "JWT_KEY", "value": "${{ secrets.JWT_KEY }}" },
               { "name": "JWT_ISSUER", "value": "${{ secrets.JWT_ISSUER }}" },
               { "name": "JWT_AUDIENCE", "value": "${{ secrets.JWT_AUDIENCE }}" },
+              { "name": "ASPNETCORE_ENVIRONMENT", "value": "${{ inputs.ENVIRONMENT == 'prod' && 'Production' || inputs.ENVIRONMENT == 'test' && 'Staging' || 'Development' }}" },
 
               { "name": "DB_HOST", "value": "${{ secrets.DB_HOST }}" },
               { "name": "DB_PORT", "value": "${{ secrets.DB_PORT }}" },
@@ -389,7 +397,8 @@ jobs:
   deploy-frontend:
     name: Deploy frontend (Azure Web App container)
     runs-on: ubuntu-latest
-    needs: [docker-build-frontend]
+    environment: ${{ inputs.ENVIRONMENT }}
+    needs: [docker-build-frontend, azure-db-migrations]
     if: ${{ inputs.SKIP_DEPLOY != true }}
     steps:
       - uses: actions/checkout@v4
