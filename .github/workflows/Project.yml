@@ -405,7 +405,7 @@ jobs:
               { "name": "HF_API_KEY", "value": "${{ secrets.HF_API_KEY }}" },
               { "name": "ANIMALDETECT_API_KEY", "value": "${{ secrets.ANIMALDETECT_API_KEY }}" },
               { "name": "CORS_ORIGINS", "value": "${{ secrets.CORS_ORIGINS }}" },
-              { "name": "ADMIN_EMAIL", "value": "${{ secrets.ADMIN_EMAIL }}" },
+              { "name": "ADMIN_EMAIL", "value": "${{ secrets.ADMIN_EMAIL }}" }
             ]
           mask-inputs: true
 
@@ -435,7 +435,7 @@ jobs:
           app-name: ${{ secrets.AZURE_WEBAPP_FRONTEND_NAME }}
           app-settings-json: |
             [
-              { "name": "WNE_API_PUBLIC_BASE_URL", "value": "${{ secrets.WNE_API_PUBLIC_BASE_URL }}" },
+              { "name": "WNE_API_PUBLIC_BASE_URL", "value": "${{ secrets.WNE_API_PUBLIC_BASE_URL }}" }
             ]
           mask-inputs: true
 
