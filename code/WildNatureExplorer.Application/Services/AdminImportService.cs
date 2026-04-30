@@ -196,7 +196,7 @@ public class AdminImportService : IAdminImportService
         {
             CommonName = dto.CommonName,
             ScientificName = dto.ScientificName,
-            Description = dto.Description,
+            Description = dto.Description ?? string.Empty,
             IsDangerous = dto.IsDangerous,
             IsRare = dto.IsRare,
             SizeId = size.Id
