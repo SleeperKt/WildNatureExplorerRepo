@@ -406,8 +406,6 @@ jobs:
               { "name": "ANIMALDETECT_API_KEY", "value": "${{ secrets.ANIMALDETECT_API_KEY }}" },
               { "name": "CORS_ORIGINS", "value": "${{ secrets.CORS_ORIGINS }}" },
               { "name": "ADMIN_EMAIL", "value": "${{ secrets.ADMIN_EMAIL }}" },
-              { "name": "AZURE_STORAGE_ACCOUNT", "value": "${{ secrets.AZURE_STORAGE_ACCOUNT }}" },
-              { "name": "AZURE_STORAGE_KEY", "value": "${{ secrets.AZURE_STORAGE_KEY }}" }
             ]
           mask-inputs: true
 
