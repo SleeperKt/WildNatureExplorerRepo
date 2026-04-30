@@ -46,10 +46,6 @@ on:
         required: true
       AZURE_CREDENTIALS:
         required: true
-      AZURE_STORAGE_ACCOUNT:
-        required: true
-      AZURE_STORAGE_KEY:
-        required: true
       DB_HOST:
         required: true
       DB_PORT:
