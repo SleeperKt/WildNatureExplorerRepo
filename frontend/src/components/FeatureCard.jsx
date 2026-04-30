@@ -1,13 +1,16 @@
 import { useNavigate } from "react-router-dom";
 
-export default function FeatureCard({ icon, title, description, link, requiresAuth = false }) {
+export default function FeatureCard({ icon, title, description, link, requiresAuth = false, onBetaClick = null, isBeta = false }) {
   const navigate = useNavigate();
   const isAuthenticated = Boolean(localStorage.getItem("token"));
 
   const handleClick = () => {
+    if (isBeta && onBetaClick) {
+      onBetaClick();
+      return;
+    }
     if (requiresAuth && !isAuthenticated) {
-      alert("Please sign in to access this feature");
-      navigate("/login");
+      navigate(`/login?redirect=${encodeURIComponent(link)}`);
       return;
     }
     navigate(link);

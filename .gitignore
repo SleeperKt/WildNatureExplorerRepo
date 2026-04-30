@@ -9,6 +9,11 @@ obj/
 out/
 testdocs/
 
+requirements/
+flutter_app/
+android/
+docs(not)/
+
 .idea/
 
 *.dll

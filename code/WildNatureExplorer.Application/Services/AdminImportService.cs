@@ -202,7 +202,7 @@ public class AdminImportService : IAdminImportService
             SizeId = size.Id
         };
 
-        foreach (var c in SplitValues(dto.Countries))
+        foreach (var c in SplitValues(dto.Countries ?? string.Empty))
         {
             var normalized = c.ToUpperInvariant();
 
@@ -216,7 +216,7 @@ public class AdminImportService : IAdminImportService
             });
         }
 
-        foreach (var c in SplitValues(dto.Colors))
+        foreach (var c in SplitValues(dto.Colors ?? string.Empty))
         {
             var normalized = c.ToUpperInvariant();
             var color = await _colorRepository.GetByNormalizedNameAsync(normalized)
@@ -229,7 +229,7 @@ public class AdminImportService : IAdminImportService
             });
         }
 
-        foreach (var h in SplitValues(dto.Habitats))
+        foreach (var h in SplitValues(dto.Habitats ?? string.Empty))
         {
             var normalized = h.ToUpperInvariant();
             var habitat = await _habitatRepository.GetByNormalizedNameAsync(normalized)

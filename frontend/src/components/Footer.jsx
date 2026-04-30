@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
 import grassA from "../images/Nature/grass-A.svg";
 import grassB from "../images/Nature/grass-B.svg";
-import treeA from "../images/Nature/Tree-A.svg";
-import treeB from "../images/Nature/Tree-B.svg";
 
 export default function Footer() {
   return (
@@ -48,9 +46,9 @@ export default function Footer() {
           </div>
           <div className="footer-column">
             <h4>Connect</h4>
-            <a href="#">GitHub</a>
-            <a href="#">Twitter</a>
-            <a href="#">Contact</a>
+            <a href="https://github.com/SleeperKt/WildNatureExplorerRepo" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="https://x.com/NatureWiil50398" target="_blank" rel="noopener noreferrer">X (Twitter)</a>
+            <a href="mailto:wiildnatureexplorer@gmail.com">Contact</a>
           </div>
         </div>
       </div>

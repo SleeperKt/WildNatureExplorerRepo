@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using WildNatureExplorer.Application.DTOs.Geo;
 using WildNatureExplorer.Application.Interfaces.Repositories;
+using WildNatureExplorer.Application.Interfaces.Services;
 
 namespace WildNatureExplorer.API.Controllers;
 
@@ -9,11 +11,16 @@ public class MapController : ControllerBase
 {
     private readonly ISpeciesRepository _speciesRepository;
     private readonly ICountryRepository _countryRepository;
+    private readonly IPathSimulationService _pathSimulationService;
 
-    public MapController(ISpeciesRepository speciesRepository, ICountryRepository countryRepository)
+    public MapController(
+        ISpeciesRepository speciesRepository, 
+        ICountryRepository countryRepository,
+        IPathSimulationService pathSimulationService)
     {
         _speciesRepository = speciesRepository;
         _countryRepository = countryRepository;
+        _pathSimulationService = pathSimulationService;
     }
 
     /// <summary>
@@ -213,6 +220,36 @@ public class MapController : ControllerBase
             AlertCount = alerts.Count,
             Alerts = alerts.OrderBy(a => ((dynamic)a).DistanceKm)
         });
+    }
+
+    /// <summary>
+    /// Simulate a path and check for danger zones
+    /// Supports both database-driven (PostgreSQL) and client-side simulation modes
+    /// </summary>
+    [HttpPost("simulate-path")]
+    public async Task<IActionResult> SimulatePath([FromBody] PathSimulationRequest request)
+    {
+        if (request.CountryId == Guid.Empty)
+            return BadRequest("Country ID is required");
+
+        if (request.Waypoints == null || request.Waypoints.Count < 2)
+            return BadRequest("At least 2 waypoints are required");
+
+        try
+        {
+            PathSimulationResponse result = request.SimulationMode switch
+            {
+                "database" => await _pathSimulationService.SimulatePathDatabaseAsync(request),
+                "client" => await _pathSimulationService.SimulatePathClientAsync(request),
+                _ => await _pathSimulationService.SimulatePathClientAsync(request) // Default to client
+            };
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     /// <summary>

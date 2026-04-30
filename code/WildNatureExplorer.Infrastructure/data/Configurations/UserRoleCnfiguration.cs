@@ -12,6 +12,15 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
 
         builder.HasKey(x => new { x.UserId, x.RoleId });
 
+        builder.HasIndex(x => x.UserId)
+               .HasDatabaseName("IX_UserRoles_UserId");
+
+        builder.HasIndex(x => x.RoleId)
+               .HasDatabaseName("IX_UserRoles_RoleId");
+
+        builder.HasIndex(x => x.AssignedAt)
+               .HasDatabaseName("IX_UserRoles_AssignedAt");
+
         builder.Property(x => x.AssignedAt)
                .IsRequired();
 

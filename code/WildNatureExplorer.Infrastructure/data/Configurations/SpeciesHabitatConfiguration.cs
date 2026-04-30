@@ -10,6 +10,12 @@ public class SpeciesHabitatConfiguration : IEntityTypeConfiguration<SpeciesHabit
 
         builder.HasKey(x => new { x.SpeciesId, x.HabitatId });
 
+        builder.HasIndex(x => x.SpeciesId)
+            .HasDatabaseName("IX_SpeciesHabitats_SpeciesId");
+
+        builder.HasIndex(x => x.HabitatId)
+            .HasDatabaseName("IX_SpeciesHabitats_HabitatId");
+
         builder.HasOne(x => x.Species)
             .WithMany(x => x.Habitats)
             .HasForeignKey(x => x.SpeciesId)

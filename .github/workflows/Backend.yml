@@ -1,4 +1,12 @@
-name: Backend CI/CD
+# Required GitHub Actions secrets for this reusable workflow include:
+# JWT_KEY, JWT_ISSUER, JWT_AUDIENCE, GROQ_API_KEY, HF_API_KEY, ANIMALDETECT_API_KEY,
+# DOCKERHUB_USERNAME, DOCKERHUB_TOKEN, AZURE_CREDENTIALS, AZURE_STORAGE_ACCOUNT, AZURE_STORAGE_KEY,
+# DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, ADMIN_EMAIL,
+# WNE_API_PUBLIC_BASE_URL (HTTPS API origin for Vite build, no trailing slash),
+# CORS_ORIGINS (comma-separated allowed frontend origins, e.g. https://your-frontend.azurewebsites.net),
+# AZURE_WEBAPP_API_NAME, AZURE_WEBAPP_FRONTEND_NAME (Linux container Web App names).
+
+name: Backend & Frontend CI/CD
 
 on:
   workflow_call:
@@ -23,7 +31,7 @@ on:
         default: true
         type: boolean
       DOCKER_BUILD:
-        description: "Build Docker image"
+        description: "Build Docker images"
         required: true
         default: true
         type: boolean
@@ -37,6 +45,8 @@ on:
       GROQ_API_KEY:
         required: true
       HF_API_KEY:
+        required: true
+      ANIMALDETECT_API_KEY:
         required: true
       DOCKERHUB_USERNAME:
         required: true
@@ -58,12 +68,20 @@ on:
         required: true
       DB_PASSWORD:
         required: true
-      ADMIN_EMAIL: 
+      ADMIN_EMAIL:
+        required: true
+      WNE_API_PUBLIC_BASE_URL:
+        required: true
+      CORS_ORIGINS:
+        required: true
+      AZURE_WEBAPP_API_NAME:
+        required: true
+      AZURE_WEBAPP_FRONTEND_NAME:
         required: true
 
 jobs:
-  build:
-    name: Build
+  backend-build:
+    name: Backend — build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -72,7 +90,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
 
       - name: Restore dependencies
         run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
@@ -80,37 +98,64 @@ jobs:
       - name: Build project
         run: dotnet build ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj --no-restore --configuration Release
 
-  lint:
-    name: Lint & Static Analysis
+  backend-lint:
+    name: Backend — lint
     runs-on: ubuntu-latest
-    needs: build
+    needs: backend-build
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
       - name: Run dotnet format
         run: |
           dotnet tool install -g dotnet-format
           dotnet-format ./WildNatureExplorer.sln --check
 
-  db-setup:
-    name: DB Setup
+  frontend:
+    name: Frontend — lint & build
     runs-on: ubuntu-latest
-    needs: build
-    if: ${{ inputs.SKIP_DB_SETUP != 'true' }}
-    
+    needs: backend-build
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        env:
+          VITE_API_URL: ${{ secrets.WNE_API_PUBLIC_BASE_URL }}
+        run: npm run build
+
+  db-setup:
+    name: DB setup (CI Postgres + EF)
+    runs-on: ubuntu-latest
+    needs: backend-build
+    if: ${{ inputs.SKIP_DB_SETUP != true }}
+
     env:
       DB_HOST: localhost
       DB_PORT: 5432
       DB_NAME: wild_nature_explorer
       DB_USER: postgres
       DB_PASSWORD: postgres
-      JWT_KEY: l48z29KIqrcRDf6rrqotkwJsqiWz6IqiQr3Lo0QSS6O
-      JWT_ISSUER: ExampleIssuer
-      JWT_AUDIENCE: ExampleUsers
-      
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+      JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+      JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+
     services:
       postgres:
         image: postgres:15
@@ -121,54 +166,51 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U $POSTGRES_USER"
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-  
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-  
+      - uses: actions/checkout@v4
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
-  
+          dotnet-version: "8.0.x"
+
       - name: Wait for PostgreSQL
         run: |
-          echo "Waiting for PostgreSQL to be ready..."
+          echo "Waiting for PostgreSQL..."
           for i in {1..30}; do
             pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER && break
             sleep 2
           done
-  
+
       - name: Install dotnet-ef
         run: |
           dotnet tool install --global dotnet-ef --version 8.*
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-  
+
       - name: Restore dependencies
         run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
-  
-      - name: Run EF migrations
-        env:
-          ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }}
+
+      - name: Run EF migrations (CI database)
         run: |
           dotnet ef database update \
-            --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+            --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
             --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
 
       - name: List migrations
         run: |
           dotnet ef migrations list \
-            --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+            --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
             --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
 
   unit-tests:
-    name: Unit Tests
+    name: Unit tests
     runs-on: ubuntu-latest
-    needs: [build, lint]
+    needs: [backend-build, backend-lint]
     env:
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -179,15 +221,14 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
       - name: Run unit tests
         run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --filter "Category=Unit"
 
   integration-tests:
-    name: Integration Tests
+    name: Integration tests
     runs-on: ubuntu-latest
-    needs: [unit-tests, db-setup]
-    if: ${{ inputs.RUN_INTEGRATION_TESTS == true }}
+    needs: [unit-tests, frontend]
     env:
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -198,12 +239,16 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: "8.0.x"
       - name: Run integration tests
+        if: ${{ inputs.RUN_INTEGRATION_TESTS == true }}
         run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --filter "Category=Integration"
+      - name: Skip integration tests (workflow input)
+        if: ${{ inputs.RUN_INTEGRATION_TESTS != true }}
+        run: echo "Skipping integration tests (RUN_INTEGRATION_TESTS=false)."
 
   azure-db-migrations:
-    name: Apply Migrations to Azure DB
+    name: Apply migrations (Azure Postgres)
     runs-on: ubuntu-latest
     needs: [integration-tests]
     if: ${{ inputs.SKIP_DEPLOY != true }}
@@ -217,108 +262,143 @@ jobs:
       JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
       JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-  
+      - uses: actions/checkout@v4
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
-  
+          dotnet-version: "8.0.x"
+
       - name: Install dotnet-ef
         run: |
           dotnet tool install --global dotnet-ef --version 8.*
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-  
+
       - name: Restore dependencies
         run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
-      - name: Show effective connection string (masked)
-        run: |
-          echo "$ConnectionStrings__DefaultConnection"
-          
-      - name: Show connection string (masked)
-        run: |
-          echo "Host=$DB_HOST;Port=$DB_PORT;Database=$DB_NAME;Username=$DB_USER;Password=***"
 
       - name: Apply EF migrations to Azure DB
         run: |
           dotnet ef database update \
-            --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+            --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
             --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
             --connection "Host=${{ secrets.DB_HOST }};Port=${{ secrets.DB_PORT }};Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }};SSL Mode=Require;Trust Server Certificate=true"
 
-  
       - name: List applied migrations
         run: |
           dotnet ef migrations list \
-            --project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+            --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
             --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
 
-  docker-build:
-    name: Docker Build & Push
+  docker-build-api:
+    name: Docker — API build & push
     runs-on: ubuntu-latest
     needs: [integration-tests]
     if: ${{ inputs.DOCKER_BUILD == true }}
     steps:
       - uses: actions/checkout@v4
-  
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-  
-      - name: Build Docker image
+
+      - name: Build & push API image
         run: |
           docker build \
             -f docker/Dockerfile \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:${{ github.sha }} \
             .
-  
-      - name: Push Docker image
-        run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:${{ github.sha }}
 
-  deploy:
-    name: Deploy to Azure Web App
+  docker-build-frontend:
+    name: Docker — frontend build & push
     runs-on: ubuntu-latest
-    needs: [docker-build]
+    needs: [docker-build-api]
+    if: ${{ inputs.DOCKER_BUILD == true }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push frontend image
+        run: |
+          docker build \
+            -f frontend/Dockerfile \
+            --build-arg WNE_API_PUBLIC_BASE_URL="${{ secrets.WNE_API_PUBLIC_BASE_URL }}" \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/wne-web:latest \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/wne-web:${{ github.sha }} \
+            .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-web:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-web:${{ github.sha }}
+
+  deploy-api:
+    name: Deploy API (Azure Web App container)
+    runs-on: ubuntu-latest
+    needs: [docker-build-api]
     if: ${{ inputs.SKIP_DEPLOY != true }}
     steps:
       - uses: actions/checkout@v4
+
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: Set Azure App Service settings
+
+      - name: Set Azure App Service settings (API)
         uses: azure/appservice-settings@v1
         with:
-          app-name: wild-nature-explorer-web-app
+          app-name: ${{ secrets.AZURE_WEBAPP_API_NAME }}
           app-settings-json: |
             [
               { "name": "JWT_KEY", "value": "${{ secrets.JWT_KEY }}" },
               { "name": "JWT_ISSUER", "value": "${{ secrets.JWT_ISSUER }}" },
               { "name": "JWT_AUDIENCE", "value": "${{ secrets.JWT_AUDIENCE }}" },
-      
+
               { "name": "DB_HOST", "value": "${{ secrets.DB_HOST }}" },
               { "name": "DB_PORT", "value": "${{ secrets.DB_PORT }}" },
               { "name": "DB_USER", "value": "${{ secrets.DB_USER }}" },
               { "name": "DB_PASSWORD", "value": "${{ secrets.DB_PASSWORD }}" },
               { "name": "DB_NAME", "value": "${{ secrets.DB_NAME }}" },
-      
+
               { "name": "GROQ_API_KEY", "value": "${{ secrets.GROQ_API_KEY }}" },
               { "name": "HF_API_KEY", "value": "${{ secrets.HF_API_KEY }}" },
+              { "name": "ANIMALDETECT_API_KEY", "value": "${{ secrets.ANIMALDETECT_API_KEY }}" },
+              { "name": "CORS_ORIGINS", "value": "${{ secrets.CORS_ORIGINS }}" },
               { "name": "ADMIN_EMAIL", "value": "${{ secrets.ADMIN_EMAIL }}" },
               { "name": "AZURE_STORAGE_ACCOUNT", "value": "${{ secrets.AZURE_STORAGE_ACCOUNT }}" },
               { "name": "AZURE_STORAGE_KEY", "value": "${{ secrets.AZURE_STORAGE_KEY }}" }
             ]
           mask-inputs: true
 
-      - name: Deploy to Azure Web App (Container)
+      - name: Deploy API container
         uses: azure/webapps-deploy@v2
         with:
-          app-name: "wild-nature-explorer-web-app"
+          app-name: ${{ secrets.AZURE_WEBAPP_API_NAME }}
           images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest"
 
+  deploy-frontend:
+    name: Deploy frontend (Azure Web App container)
+    runs-on: ubuntu-latest
+    needs: [docker-build-frontend]
+    if: ${{ inputs.SKIP_DEPLOY != true }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy frontend container
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_FRONTEND_NAME }}
+          images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-web:latest"

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { api } from "../api/client";
 import { termsText } from "../content/terms";
+import { validateLoginForm, validateRegisterForm } from "../utils/validation";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -9,6 +10,8 @@ export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(searchParams.get("mode") === "register");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [showBetaModal, setShowBetaModal] = useState(false);
 
   // Form fields
   const [email, setEmail] = useState("");
@@ -22,44 +25,50 @@ export default function LoginPage() {
   // Update mode from URL
   useEffect(() => {
     setIsRegister(searchParams.get("mode") === "register");
+    setFieldErrors({});
   }, [searchParams]);
 
   const login = async () => {
-    if (!email || !password) {
-      setError("Please enter email and password");
+    const errors = validateLoginForm(email, password);
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("");
       return;
     }
+
+    setFieldErrors({});
     setIsLoading(true);
     setError("");
     try {
       const res = await api.post("/api/auth/login", { email, password });
-      console.log("LOGIN RESPONSE:", res.data); // ← ВОТ СЮДА
-
       const token = res.data.token;
-      console.log("LOGIN RESPONSE:", res.data);
 
       if (!res.data.acceptedTerms) {
         setPendingToken(token);
         setShowTerms(true);
-        setIsLoading(false); // ← ВАЖНО
+        setIsLoading(false);
         return;
       }
 
-      // если уже приняты → логиним сразу
       localStorage.setItem("token", token);
-      navigate("/");
-      } catch (err) {
-        setError(err.response?.data?.message || "Login failed. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
+      const redirectTo = searchParams.get("redirect");
+      navigate(redirectTo && redirectTo.startsWith("/") ? redirectTo : "/");
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const register = async () => {
-    if (!email || !password || !firstName || !lastName) {
-      setError("Please fill all fields");
+    const errors = validateRegisterForm(email, password, firstName, lastName);
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("");
       return;
     }
+
+    setFieldErrors({});
     setIsLoading(true);
     setError("");
     try {
@@ -72,6 +81,9 @@ export default function LoginPage() {
       setIsRegister(false);
       setError("");
       setPassword("");
+      setEmail("");
+      setFirstName("");
+      setLastName("");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
@@ -183,8 +195,12 @@ export default function LoginPage() {
                       placeholder="John"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
+                      className={fieldErrors.firstName ? "input-error" : ""}
                     />
                   </div>
+                  {fieldErrors.firstName && (
+                    <span className="auth-field-error">{fieldErrors.firstName}</span>
+                  )}
                 </div>
                 <div className="auth-field">
                   <label htmlFor="lastName">Last Name</label>
@@ -199,8 +215,12 @@ export default function LoginPage() {
                       placeholder="Doe"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
+                      className={fieldErrors.lastName ? "input-error" : ""}
                     />
                   </div>
+                  {fieldErrors.lastName && (
+                    <span className="auth-field-error">{fieldErrors.lastName}</span>
+                  )}
                 </div>
               </div>
             )}
@@ -215,12 +235,16 @@ export default function LoginPage() {
                 </svg>
                 <input
                   id="email"
-                  type="email"
+                  type="text"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className={fieldErrors.email ? "input-error" : ""}
                 />
               </div>
+              {fieldErrors.email && (
+                <span className="auth-field-error">{fieldErrors.email}</span>
+              )}
             </div>
 
             {/* Password field */}
@@ -234,9 +258,10 @@ export default function LoginPage() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="Example123!"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className={fieldErrors.password ? "input-error" : ""}
                 />
                 <button 
                   type="button" 
@@ -257,6 +282,9 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              {fieldErrors.password && (
+                <span className="auth-field-error">{fieldErrors.password}</span>
+              )}
             </div>
 
             {/* Forgot password link - only for login */}
@@ -291,7 +319,7 @@ export default function LoginPage() {
 
             {/* Social login buttons */}
             <div className="auth-social">
-              <button type="button" className="auth-social-btn google">
+              <button type="button" className="auth-social-btn google" onClick={() => setShowBetaModal(true)}>
                 <svg viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                   <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -300,7 +328,7 @@ export default function LoginPage() {
                 </svg>
                 <span>Google</span>
               </button>
-              <button type="button" className="auth-social-btn github">
+              <button type="button" className="auth-social-btn github" onClick={() => setShowBetaModal(true)}>
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                 </svg>
@@ -324,6 +352,29 @@ export default function LoginPage() {
           By continuing, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
         </p>
       </div>
+        {showBetaModal && (
+        <div className="beta-modal-overlay">
+          <div className="beta-modal-box">
+            <div className="beta-modal-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+            </div>
+            <h2 className="beta-modal-title">Coming Soon</h2>
+            <p className="beta-modal-message">
+              This application is currently in <strong>beta testing</strong>. Social login features (Google & GitHub) will be available in future updates.
+            </p>
+            <button
+              className="beta-modal-button"
+              onClick={() => setShowBetaModal(false)}
+            >
+              Got It
+            </button>
+          </div>
+        </div>
+      )}
+
         {showTerms && (
         <div className="terms-modal-overlay">
           <div className="terms-modal-box">
@@ -338,7 +389,6 @@ export default function LoginPage() {
 
             <button
               className="terms-modal-button"
-              onClick={() => console.log("CLICKED")}
               onClick={async () => {
               try {
                 await api.post(
@@ -352,7 +402,8 @@ export default function LoginPage() {
                 );
 
                 localStorage.setItem("token", pendingToken);
-                navigate("/");
+                const redirectTo = searchParams.get("redirect");
+                navigate(redirectTo && redirectTo.startsWith("/") ? redirectTo : "/");
               } catch (err) {
                 console.error("ACCEPT TERMS FAILED:", err.response?.data || err.message);
                 setError("Failed to accept terms. Please try again.");

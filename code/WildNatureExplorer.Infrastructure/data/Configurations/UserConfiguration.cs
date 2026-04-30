@@ -15,6 +15,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(x => x.Email)
                .IsUnique();
 
+        builder.HasIndex(x => x.CreatedAt)
+               .HasDatabaseName("IX_Users_CreatedAt");
+
+        builder.HasIndex(x => x.IsActive)
+               .HasDatabaseName("IX_Users_IsActive");
+
         builder.Property(x => x.Email)
                .IsRequired()
                .HasMaxLength(256);
@@ -39,6 +45,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(x => x.UpdatedAt)
                .IsRequired();
+
+        builder.Property(x => x.UpdatedAt)
+            .IsRequired();
 
         builder.HasMany(x => x.UserRoles)
                .WithOne(x => x.User)

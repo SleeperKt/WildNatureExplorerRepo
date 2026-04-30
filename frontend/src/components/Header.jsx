@@ -32,6 +32,9 @@ export default function Header() {
           <Link to="/search" className="nav-link">Explore</Link>
           <Link to="/geo" className="nav-link">Map</Link>
           <Link to="/ai" className="nav-link">AI Assistant</Link>
+          {isAuthenticated && (
+            <Link to="/library" className="nav-link">Library</Link>
+          )}
         </nav>
 
         <div className="header-actions">

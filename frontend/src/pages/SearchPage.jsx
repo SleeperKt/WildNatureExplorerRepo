@@ -10,7 +10,6 @@ import rareIcon from "../images/rare.svg";
 // Forest images
 import treeBackA from "../images/Nature/forest/tree-backA.svg";
 import treeBackB from "../images/Nature/forest/tree-BackB.svg";
-import treeBackC from "../images/Nature/forest/tree-BackC.svg";
 import pineForest from "../images/Nature/forest/Pine-forest-back-removebg-preview.png";
 import leafA from "../images/Nature/Leaf-A.svg";
 import leafB from "../images/Nature/Leaf-B.svg";

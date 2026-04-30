@@ -4,9 +4,9 @@ namespace WildNatureExplorer.Domain.Entities;
 public class AiSession : Entity
 {
     public Guid UserId { get; set; }
+    public User User { get; set; } = null!;
     public string AnimalName { get; set; } = null!;
     public string ImageUrl { get; set; } = null!;
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsEnded { get; set; } = false;
     public DateTime? EndedAt { get; set; }
 

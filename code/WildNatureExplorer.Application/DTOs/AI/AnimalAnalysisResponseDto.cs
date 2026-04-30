@@ -21,6 +21,24 @@ namespace WildNatureExplorer.Application.DTOs.AI
     public class TechnicalInfoDto
     {
         public UsageDto Usage { get; set; } = new UsageDto();
+
+        /// <summary>Optional observability: model routing, tools, light retrieval.</summary>
+        public InferenceMetadataDto? Inference { get; set; }
+    }
+
+    public class InferenceMetadataDto
+    {
+        public string? PrimaryModel { get; set; }
+        public string? EffectiveModel { get; set; }
+        public bool UsedFallbackModel { get; set; }
+        public string? Intent { get; set; }
+        public string? DetectedInputScript { get; set; }
+        public IReadOnlyList<string>? RetrievalChunkIds { get; set; }
+        public IReadOnlyList<string>? ToolsUsed { get; set; }
+        public bool LlmSkipped { get; set; }
+
+        /// <summary>Listed for transparency when Groq retries with <see cref="ChatLlmOptions.FallbackModel"/>.</summary>
+        public string? ConfiguredFallbackModel { get; set; }
     }
 
     public class UsageDto

@@ -28,6 +28,10 @@ public class ExceptionHandlingMiddleware
         {
             await WriteError(context, HttpStatusCode.BadRequest, ex.Message, "SAFETY_POLICY_VIOLATION", "SafetyPolicyException");
         }
+        catch (InvalidAiSessionException ex)
+        {
+            await WriteError(context, HttpStatusCode.BadRequest, ex.Message, "AI_SESSION_INVALID", "InvalidAiSessionException");
+        }
         catch (ValidationException ex)
         {
             await WriteError(context, HttpStatusCode.UnprocessableEntity, ex.Message, ex.ErrorCode ?? "VALIDATION_ERROR", "ValidationException");

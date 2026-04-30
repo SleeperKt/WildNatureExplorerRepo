@@ -15,12 +15,21 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.HasIndex(x => x.RoleName)
                .IsUnique();
 
+        builder.HasIndex(x => x.CreatedAt)
+               .HasDatabaseName("IX_Roles_CreatedAt");
+
         builder.Property(x => x.RoleName)
                .IsRequired()
                .HasMaxLength(50);
 
         builder.Property(x => x.Description)
                .HasMaxLength(256);
+
+        builder.Property(x => x.CreatedAt)
+               .IsRequired();
+
+        builder.Property(x => x.UpdatedAt)
+               .IsRequired();
 
         builder.HasMany(x => x.Users)
                .WithOne(x => x.Role)

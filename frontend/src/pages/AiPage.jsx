@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import SaveSightingModal from "../components/SaveSightingModal";
 
 // Eagle SVG imports - A, B, C frames for wing animation
 import eagleA from "../images/Animal/Eagle/EagleA.svg";
@@ -56,6 +57,8 @@ export default function AiPage() {
   const [recognizer, setRecognizer] = useState("huggingface");
   const [birds, setBirds] = useState([]);
   const [clouds, setClouds] = useState([]);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [saveToast, setSaveToast] = useState("");
 
   const chatRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -194,7 +197,11 @@ export default function AiPage() {
       }
       if (createdUrlsRef.current.length) {
         createdUrlsRef.current.forEach((u) => {
-          try { URL.revokeObjectURL(u); } catch { }
+          try {
+            URL.revokeObjectURL(u);
+          } catch {
+            /* revokeObjectURL is best-effort */
+          }
         });
         createdUrlsRef.current = [];
       }
@@ -246,9 +253,9 @@ export default function AiPage() {
               <p className="ai-animal-name">{animal.name}</p>
               <p className="ai-animal-desc">{animal.description}</p>
               <div className="ai-animal-details">
-                <span><strong>Habitat:</strong> {animal.habitat}</span>
-                <span><strong>Danger:</strong> {animal.dangerLevel}</span>
-                <span><strong>Rarity:</strong> {animal.rarityLevel}</span>
+                <span><strong>Habitat:</strong> {animal.habitat || "—"}</span>
+                <span><strong>Risk to humans:</strong> {animal.dangerLevel || "—"}</span>
+                <span><strong>Wild population:</strong> {animal.rarityLevel || "—"}</span>
               </div>
             </>
           ),
@@ -257,7 +264,13 @@ export default function AiPage() {
         },
       ]);
     } catch (err) {
-      alert("Analysis failed: " + (err.response?.data?.message || err.message));
+      const payload = err.response?.data;
+      const code = payload?.errorCode ?? payload?.ErrorCode;
+      const hint =
+        err.response?.status === 400 && code === "AI_SESSION_INVALID"
+          ? " Session invalid — start a new chat (refresh or click new session flow)."
+          : "";
+      alert("Analysis failed: " + (payload?.message || err.message) + hint);
     } finally {
       setIsAnalyzing(false);
     }
@@ -272,7 +285,7 @@ export default function AiPage() {
     try {
       let finalQuestion = question;
       if (currentAnimal) {
-        finalQuestion = `We are discussing a ${currentAnimal.name}. ${currentAnimal.description} Habitat: ${currentAnimal.habitat}, Danger Level: ${currentAnimal.dangerLevel}, Rarity: ${currentAnimal.rarity}. User question: ${question}`;
+        finalQuestion = `We are discussing ${currentAnimal.name}. Context: ${currentAnimal.description || "(no extra summary)"} Habitat: ${currentAnimal.habitat || "unknown"}. Risk to humans: ${currentAnimal.dangerLevel || "unknown"}. Wild population rarity: ${currentAnimal.rarityLevel || "unknown"}. User question: ${question}`;
       }
 
       let sid = sessionId;
@@ -290,7 +303,7 @@ export default function AiPage() {
         .filter(Boolean)
         .map((line, idx) => {
           let trimmed = line.trim().replace(/\*\*/g, "");
-          if (/^(Danger Level|Habitat|Rarity|Classification|Height|Weight|Diet|Social Structure|Conservation Status|Interesting Fact)/i.test(trimmed)) {
+          if (/^(Risk to humans|Danger Level|Habitat|Wild population|Rarity|Classification|Height|Weight|Diet|Social Structure|Conservation Status|Interesting Fact)/i.test(trimmed)) {
             return <p key={idx} className="ai-highlight">{trimmed}</p>;
           }
           return <p key={idx}>{trimmed}</p>;
@@ -299,7 +312,16 @@ export default function AiPage() {
       setMessages((prev) => [...prev, { type: "bot", content: formattedAnswer }]);
       setQuestion("");
     } catch (err) {
-      alert("Failed to get answer: " + (err.response?.data?.message || err.message));
+      const st = err.response?.status;
+      const payload = err.response?.data;
+      const tid = payload?.traceId ?? payload?.TraceId;
+      const msg =
+        st === 429
+          ? "Too many requests — wait briefly and retry (AI rate limiting)."
+          : (typeof payload === "object" && payload?.message)
+            ? payload.message
+            : err.message;
+      alert("Failed to get answer: " + msg + (tid ? ` (trace: ${tid})` : ""));
     } finally {
       setIsAsking(false);
     }
@@ -343,6 +365,12 @@ export default function AiPage() {
   const FeedbackIcon = (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </svg>
+  );
+
+  const BookmarkIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
     </svg>
   );
 
@@ -474,6 +502,17 @@ export default function AiPage() {
               )}
             </button>
 
+            {currentAnimal && (
+              <button
+                className="ai-btn ai-btn-save"
+                onClick={() => setSaveOpen(true)}
+                disabled={!sessionId}
+              >
+                {BookmarkIcon}
+                Save to Library
+              </button>
+            )}
+
             <button 
               className="ai-btn ai-btn-secondary"
               onClick={() => setFeedbackOpen(true)} 
@@ -547,6 +586,35 @@ export default function AiPage() {
       </main>
 
       <Footer />
+
+      {/* Save to Library Modal — only meaningful after a recognition */}
+      <SaveSightingModal
+        isOpen={saveOpen}
+        onClose={() => setSaveOpen(false)}
+        initialAnimalName={currentAnimal?.name || ""}
+        sessionId={sessionId}
+        recognizedImage={file}
+        onSaved={() => {
+          setSaveOpen(false);
+          setSaveToast(`Saved "${currentAnimal?.name}" to your library`);
+          setTimeout(() => setSaveToast(""), 4000);
+        }}
+      />
+
+      {saveToast && (
+        <div className="save-toast">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <span>{saveToast}</span>
+          <button
+            className="save-toast-link"
+            onClick={() => navigate("/library")}
+          >
+            View library →
+          </button>
+        </div>
+      )}
 
       {/* Feedback Modal */}
       {feedbackOpen && (
