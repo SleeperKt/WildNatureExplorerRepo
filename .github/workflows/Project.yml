@@ -1,16 +1,3 @@
-# Required GitHub Actions secrets for this reusable workflow include:
-# JWT_KEY, JWT_ISSUER, JWT_AUDIENCE, GROQ_API_KEY, HF_API_KEY, ANIMALDETECT_API_KEY,
-# DOCKERHUB_USERNAME, DOCKERHUB_TOKEN, AZURE_CREDENTIALS, AZURE_STORAGE_ACCOUNT, AZURE_STORAGE_KEY,
-# DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, ADMIN_EMAIL,
-# WNE_API_PUBLIC_BASE_URL (HTTPS API origin for Vite build, no trailing slash),
-# CORS_ORIGINS (comma-separated allowed frontend origins, e.g. https://your-frontend.azurewebsites.net),
-# AZURE_WEBAPP_API_NAME, AZURE_WEBAPP_FRONTEND_NAME (Linux container Web App names).
-#
-# workflow_call.inputs.ENVIRONMENT:
-#   • Must match GitHub Environment names if you use deploy protection / env-scoped secrets (Settings → Environments).
-#   • Sets job.environment on deploy jobs (shows in Actions UI, gates approvals).
-#   • Maps to ASPNETCORE_ENVIRONMENT on the API App Service: prod→Production, test→Staging, dev→Development.
-
 name: Backend & Frontend CI/CD
 
 on:
@@ -113,8 +100,6 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: "8.0.x"
-      # Use SDK-integrated `dotnet format` (same as local dev). The legacy global
-      # `dotnet-format` tool formats raw strings differently and fails `--check` on this repo.
       - name: Run dotnet format
         run: dotnet format ./WildNatureExplorer.sln --verify-no-changes --verbosity minimal
 
@@ -163,7 +148,6 @@ jobs:
 
     services:
       postgres:
-        # Must match docker-compose db image: migrations call CREATE EXTENSION postgis (AddUserLibrary, geo functions).
         image: postgis/postgis:15-3.4
         env:
           POSTGRES_USER: postgres
@@ -368,7 +352,6 @@ jobs:
   docker-build-frontend:
     name: Docker — frontend build & push
     runs-on: ubuntu-latest
-    # Same gate as API image; jobs run in parallel (no dependency between images).
     needs: [integration-tests]
     if: ${{ inputs.DOCKER_BUILD == true }}
     steps:
@@ -395,8 +378,7 @@ jobs:
     name: Deploy API (Azure Web App container)
     runs-on: ubuntu-latest
     environment: ${{ inputs.ENVIRONMENT }}
-    # Ensure Azure schema is migrated before pulling a new API container.
-    needs: [docker-build-api, azure-db-migrations]
+    needs: [docker-build-api, supabase-db-migrations]
     if: ${{ inputs.SKIP_DEPLOY != true }}
     steps:
       - uses: actions/checkout@v4
@@ -443,7 +425,7 @@ jobs:
     name: Deploy frontend (Azure Web App container)
     runs-on: ubuntu-latest
     environment: ${{ inputs.ENVIRONMENT }}
-    needs: [docker-build-frontend, azure-db-migrations]
+    needs: [docker-build-frontend, supabase-db-migrations]
     if: ${{ inputs.SKIP_DEPLOY != true }}
     steps:
       - uses: actions/checkout@v4
