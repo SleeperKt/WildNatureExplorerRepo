@@ -434,6 +434,16 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Set Azure App Service settings (Frontend)
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_FRONTEND_NAME }}
+          app-settings-json: |
+            [
+              { "name": "WNE_API_PUBLIC_BASE_URL", "value": "${{ secrets.WNE_API_PUBLIC_BASE_URL }}" },
+            ]
+          mask-inputs: true
 
       - name: Deploy frontend container
         uses: azure/webapps-deploy@v2
