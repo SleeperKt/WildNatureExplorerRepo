@@ -1,5 +1,5 @@
 name: Backend & Frontend CI/CD
-
+№ This workflow is called by environment-specific workflows (dev.yml, test.yml, prod.yml) and should not be triggered directly.
 on:
   workflow_call:
     inputs:
