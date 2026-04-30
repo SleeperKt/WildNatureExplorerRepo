@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { api } from "../api/client";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import FeatureCard from "../components/FeatureCard";
@@ -32,10 +32,10 @@ export default function MainPage() {
 
     const fetchSuggestions = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/species/autocomplete?Prefix=${encodeURIComponent(query)}`,
-          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-        );
+        const res = await api.get("/api/species/autocomplete", {
+          params: { Prefix: query },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         setSuggestions(res.data);
       } catch (err) {
         console.error(err);
@@ -57,10 +57,10 @@ export default function MainPage() {
     setIsSearchFocused(false);
 
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/species/by-name?name=${encodeURIComponent(term)}`,
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-      );
+      const res = await api.get("/api/species/by-name", {
+        params: { name: term },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       setSearchResult(res.data);
       setShowResultCard(true);
     } catch (err) {
@@ -106,11 +106,11 @@ export default function MainPage() {
     </svg>
   );
 
-  const StatsIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M18 20V10" />
-      <path d="M12 20V4" />
-      <path d="M6 20v-6" />
+  const LibraryIcon = (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+      <path d="M9 7h6" />
+      <path d="M9 11h4" />
     </svg>
   );
 
@@ -387,10 +387,11 @@ export default function MainPage() {
             requiresAuth={true}
           />
           <FeatureCard
-            icon={StatsIcon}
-            title="Conservation Data"
-            description="Access up-to-date information on endangered species and conservation efforts worldwide."
-            link="/search"
+            icon={LibraryIcon}
+            title="My Library"
+            description="Save the animals you've recognised with their location and notes, then revisit them on your private map."
+            link="/library"
+            requiresAuth={true}
           />
         </div>
       </section>

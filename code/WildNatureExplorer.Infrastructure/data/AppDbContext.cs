@@ -27,6 +27,8 @@ public class AppDbContext : DbContext
 
     public DbSet<SpeciesLocation> SpeciesLocations => Set<SpeciesLocation>();
 
+    public DbSet<UserSighting> UserSightings => Set<UserSighting>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);

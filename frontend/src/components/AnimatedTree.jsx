@@ -8,7 +8,7 @@ import treefront1 from '../images/Nature/forest/Fronttree/treefront.svg';
  * Always displays the static treefront.svg 
  * Falling leaves animation is handled by parent (SearchPage)
  */
-export default function AnimatedTree({ isWindy }) {
+export default function AnimatedTree() {
   const containerRef = useRef(null);
 
   return (

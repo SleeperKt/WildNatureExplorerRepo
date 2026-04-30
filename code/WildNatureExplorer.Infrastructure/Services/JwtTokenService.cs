@@ -19,7 +19,8 @@ public class JwtTokenService : IJwtTokenService
 
     public string GenerateToken(Guid userId, string email, IEnumerable<Role> roles)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT_KEY"]));
+        var jwtKey = _configuration["JWT_KEY"] ?? throw new InvalidOperationException("JWT_KEY not configured");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>

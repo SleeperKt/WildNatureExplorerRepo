@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Swashbuckle.AspNetCore.Annotations;
 using WildNatureExplorer.Application.Interfaces.Services;
 using WildNatureExplorer.Application.DTOs.AI;
 
@@ -9,6 +11,7 @@ namespace WildNatureExplorer.API.Controllers;
 [ApiController]
 [Route("api/ai")]
 [Authorize]
+[EnableRateLimiting("AiEndpoints")]
 public class AiController : ControllerBase
 {
     private readonly IAiService _ai;
@@ -19,6 +22,8 @@ public class AiController : ControllerBase
     }
 
     [HttpPost("analyze/{sessionId}")]
+    [SwaggerOperation(Summary = "Analyze an uploaded wildlife image for the authenticated user session.")]
+    [ProducesResponseType(typeof(AnimalAnalysisResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> Analyze(Guid sessionId, IFormFile image, [FromQuery] string? recognizer = null)
     {
         using var ms = new MemoryStream();
@@ -31,6 +36,8 @@ public class AiController : ControllerBase
     }
 
     [HttpPost("start")]
+    [SwaggerOperation(Summary = "Start an AI chat/analysis session.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Start()
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -39,6 +46,8 @@ public class AiController : ControllerBase
     }
 
     [HttpPost("ask/{sessionId}")]
+    [SwaggerOperation(Summary = "Ask the wildlife assistant in an existing session (JSON \"questionAboutNature\", \"QuestionAboutNature\", or \"question\"/\"Question\").")]
+    [ProducesResponseType(typeof(ChatResponseDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> Ask(Guid sessionId, [FromBody] System.Text.Json.JsonElement body)
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -68,6 +77,7 @@ public class AiController : ControllerBase
     }
 
     [HttpPost("feedback/{sessionId}")]
+    [SwaggerOperation(Summary = "Submit end-of-session feedback.")]
     public async Task<IActionResult> Feedback(Guid sessionId, [FromBody] AiFeedbackDto dto)
     {
         await _ai.SubmitFeedbackAsync(sessionId, dto.Rating, dto.Comment);
@@ -75,6 +85,7 @@ public class AiController : ControllerBase
     }
 
     [HttpPost("end/{sessionId}")]
+    [SwaggerOperation(Summary = "Mark the AI session as ended.")]
     public async Task<IActionResult> EndSession(Guid sessionId)
     {
         await _ai.EndSessionAsync(sessionId);

@@ -12,6 +12,12 @@ public class AiMessageConfiguration : IEntityTypeConfiguration<AiMessage>
 
         builder.HasKey(x => x.Id);
 
+        builder.HasIndex(x => x.SessionId)
+            .HasDatabaseName("IX_AiMessages_SessionId");
+
+        builder.HasIndex(x => x.CreatedAt)
+            .HasDatabaseName("IX_AiMessages_CreatedAt");
+
         builder.Property(x => x.Role)
                .IsRequired()
                .HasMaxLength(20);
@@ -20,6 +26,9 @@ public class AiMessageConfiguration : IEntityTypeConfiguration<AiMessage>
                .IsRequired();
 
         builder.Property(x => x.CreatedAt)
+               .IsRequired();
+
+        builder.Property(x => x.UpdatedAt)
                .IsRequired();
     }
 }

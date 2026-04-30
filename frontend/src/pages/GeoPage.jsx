@@ -94,6 +94,29 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   return R * c;
 };
 
+// Calculate bearing (direction) between two points
+const calculateBearing = (lat1, lon1, lat2, lon2) => {
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const lat1Rad = lat1 * Math.PI / 180;
+  const lat2Rad = lat2 * Math.PI / 180;
+  
+  const y = Math.sin(dLon) * Math.cos(lat2Rad);
+  const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) -
+    Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+  
+  let bearing = Math.atan2(y, x) * 180 / Math.PI;
+  bearing = (bearing + 360) % 360; // Normalize to 0-360
+  return bearing;
+};
+
+// Convert bearing to compass direction
+const getCompassDirection = (bearing) => {
+  const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 
+                      'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+  const index = Math.round(bearing / 22.5) % 16;
+  return directions[index];
+};
+
 // Interpolate between two points
 const interpolate = (start, end, fraction) => {
   return {
@@ -153,7 +176,7 @@ export default function GeoPage() {
   const [userLocation, setUserLocation] = useState(null);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [userPath, setUserPath] = useState([]);
-  const [proximityAlerts, setProximityAlerts] = useState([]);
+  const [, setProximityAlerts] = useState([]);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState("");
   const [notificationType, setNotificationType] = useState("info"); // info, warning, danger, success
@@ -351,35 +374,7 @@ export default function GeoPage() {
     }
   };
 
-  // Check if simulated position is near dangerous animals
-  const checkSimulatedProximity = useCallback((position) => {
-    dangerPoints.forEach(animal => {
-      const distance = calculateDistance(
-        position.lat, position.lng,
-        animal.latitude, animal.longitude
-      );
-      
-      const dangerRadius = 10; // 10km
-      const warningRadius = 15; // 15km warning
-      const zoneKey = `${animal.id || animal.commonName}`;
-      
-      if (distance <= dangerRadius && !visitedZones.has(`${zoneKey}-danger`)) {
-        showNotificationMessage(
-          `⚠️ DANGER! You entered the danger zone of ${animal.commonName}! Distance: ${distance.toFixed(1)}km`,
-          "danger"
-        );
-        setVisitedZones(prev => new Set([...prev, `${zoneKey}-danger`]));
-      } else if (distance <= warningRadius && distance > dangerRadius && !visitedZones.has(`${zoneKey}-warning`)) {
-        showNotificationMessage(
-          `⚡ Warning! Approaching ${animal.commonName} danger zone - ${distance.toFixed(1)}km away`,
-          "warning"
-        );
-        setVisitedZones(prev => new Set([...prev, `${zoneKey}-warning`]));
-      }
-    });
-  }, [dangerPoints, visitedZones, showNotificationMessage]);
-
-  // Run path simulation
+  // Run path simulation (client-side only)
   const runSimulation = useCallback(() => {
     if (pathPoints.length < 2) {
       showNotificationMessage("Add at least 2 points to simulate", "warning");
@@ -392,37 +387,78 @@ export default function GeoPage() {
     setVisitedZones(new Set());
     setTraveledPath([]);
     
-    let currentSegment = 0;
-    let segmentProgress = 0;
-    const segmentSteps = 15;
+    // Generate path steps client-side by interpolating between waypoints
+    const pathSteps = [];
+    const stepsPerSegment = 15;
+    
+    for (let i = 0; i < pathPoints.length - 1; i++) {
+      for (let step = 0; step < stepsPerSegment; step++) {
+        const fraction = step / stepsPerSegment;
+        const position = interpolate(pathPoints[i], pathPoints[i + 1], fraction);
+        pathSteps.push({
+          latitude: position.lat,
+          longitude: position.lng,
+          segmentId: i,
+          stepId: i * stepsPerSegment + step
+        });
+      }
+    }
+    
+    showNotificationMessage("Starting client-side simulation...", "info");
+    
+    // Animate along the path
+    let stepIndex = 0;
     
     simulationRef.current = setInterval(() => {
-      if (currentSegment >= pathPoints.length - 1) {
+      if (stepIndex >= pathSteps.length) {
         clearInterval(simulationRef.current);
         setIsSimulating(false);
         showNotificationMessage("✅ Simulation completed!", "success");
         return;
       }
       
-      const start = pathPoints[currentSegment];
-      const end = pathPoints[currentSegment + 1];
-      const fraction = segmentProgress / segmentSteps;
-      const position = interpolate(start, end, fraction);
+      const step = pathSteps[stepIndex];
+      const position = { lat: step.latitude, lng: step.longitude };
       
       setSimulatedPosition(position);
       setTraveledPath(prev => [...prev, position]);
-      setCurrentPathIndex(currentSegment);
+      setCurrentPathIndex(step.segmentId);
       
-      // Check proximity
-      checkSimulatedProximity(position);
+      // Check proximity to danger animals client-side
+      dangerPoints.forEach(animal => {
+        const distance = calculateDistance(
+          position.lat, position.lng,
+          animal.latitude, animal.longitude
+        );
+        
+        const bearing = calculateBearing(
+          position.lat, position.lng,
+          animal.latitude, animal.longitude
+        );
+        const direction = getCompassDirection(bearing);
+        
+        const dangerRadius = 10; // 10km
+        const warningRadius = 15; // 15km warning
+        const zoneKey = `${animal.id || animal.commonName}`;
+        
+        if (distance <= dangerRadius && !visitedZones.has(`${zoneKey}-danger`)) {
+          showNotificationMessage(
+            `⚠️ DANGER! You entered the danger zone of ${animal.commonName}! Distance: ${distance.toFixed(1)}km to the ${direction}`,
+            "danger"
+          );
+          setVisitedZones(prev => new Set([...prev, `${zoneKey}-danger`]));
+        } else if (distance <= warningRadius && distance > dangerRadius && !visitedZones.has(`${zoneKey}-warning`)) {
+          showNotificationMessage(
+            `⚡ Warning! Approaching ${animal.commonName} danger zone - ${distance.toFixed(1)}km away to the ${direction}`,
+            "warning"
+          );
+          setVisitedZones(prev => new Set([...prev, `${zoneKey}-warning`]));
+        }
+      });
       
-      segmentProgress++;
-      if (segmentProgress > segmentSteps) {
-        segmentProgress = 0;
-        currentSegment++;
-      }
+      stepIndex++;
     }, 400);
-  }, [pathPoints, checkSimulatedProximity, showNotificationMessage]);
+  }, [pathPoints, dangerPoints, visitedZones, showNotificationMessage])
 
   const stopSimulation = () => {
     if (simulationRef.current) {
@@ -448,7 +484,12 @@ export default function GeoPage() {
       if (res.data.alertCount > 0) {
         const criticalAlerts = res.data.alerts.filter(a => a.warning === "CRITICAL");
         if (criticalAlerts.length > 0) {
-          showNotificationMessage(`⚠️ DANGER: You are within 5km of ${criticalAlerts[0].commonName}!`);
+          const bearing = calculateBearing(
+            location.lat, location.lng,
+            criticalAlerts[0].latitude, criticalAlerts[0].longitude
+          );
+          const direction = getCompassDirection(bearing);
+          showNotificationMessage(`⚠️ DANGER: You are within 5km of ${criticalAlerts[0].commonName} to the ${direction}!`);
         } else {
           showNotificationMessage(`Warning: ${res.data.alertCount} dangerous animal(s) nearby`);
         }

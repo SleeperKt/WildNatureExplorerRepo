@@ -41,7 +41,16 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_AiFeedbacks_CreatedAt");
+
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("IX_AiFeedbacks_SessionId");
 
                     b.ToTable("AiFeedbacks", (string)null);
                 });
@@ -67,9 +76,16 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("SessionId");
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_AiMessages_CreatedAt");
+
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("IX_AiMessages_SessionId");
 
                     b.ToTable("AiMessages", (string)null);
                 });
@@ -98,10 +114,19 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                     b.Property<bool>("IsEnded")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_AiSessions_CreatedAt");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_AiSessions_UserId");
 
                     b.ToTable("AiSessions", (string)null);
                 });
@@ -112,6 +137,9 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -121,6 +149,9 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -136,6 +167,9 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -145,6 +179,9 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -160,6 +197,9 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -169,6 +209,9 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -184,6 +227,9 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -194,7 +240,13 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_Roles_CreatedAt");
 
                     b.HasIndex("RoleName")
                         .IsUnique();
@@ -208,6 +260,9 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -217,6 +272,9 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -237,6 +295,9 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
@@ -255,9 +316,16 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                     b.Property<Guid>("SizeId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("SizeId");
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_Species_CreatedAt");
+
+                    b.HasIndex("SizeId")
+                        .HasDatabaseName("IX_Species_SizeId");
 
                     b.ToTable("Species", (string)null);
                 });
@@ -272,7 +340,11 @@ namespace WildNatureExplorer.Infrastructure.Migrations
 
                     b.HasKey("SpeciesId", "ColorId");
 
-                    b.HasIndex("ColorId");
+                    b.HasIndex("ColorId")
+                        .HasDatabaseName("IX_SpeciesColors_ColorId");
+
+                    b.HasIndex("SpeciesId")
+                        .HasDatabaseName("IX_SpeciesColors_SpeciesId");
 
                     b.ToTable("SpeciesColors", (string)null);
                 });
@@ -287,7 +359,11 @@ namespace WildNatureExplorer.Infrastructure.Migrations
 
                     b.HasKey("SpeciesId", "CountryId");
 
-                    b.HasIndex("CountryId");
+                    b.HasIndex("CountryId")
+                        .HasDatabaseName("IX_SpeciesCountries_CountryId");
+
+                    b.HasIndex("SpeciesId")
+                        .HasDatabaseName("IX_SpeciesCountries_SpeciesId");
 
                     b.ToTable("SpeciesCountries", (string)null);
                 });
@@ -302,7 +378,11 @@ namespace WildNatureExplorer.Infrastructure.Migrations
 
                     b.HasKey("SpeciesId", "HabitatId");
 
-                    b.HasIndex("HabitatId");
+                    b.HasIndex("HabitatId")
+                        .HasDatabaseName("IX_SpeciesHabitats_HabitatId");
+
+                    b.HasIndex("SpeciesId")
+                        .HasDatabaseName("IX_SpeciesHabitats_SpeciesId");
 
                     b.ToTable("SpeciesHabitats", (string)null);
                 });
@@ -312,6 +392,9 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .HasColumnType("text");
@@ -325,9 +408,16 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                     b.Property<Guid>("SpeciesId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("SpeciesId");
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_SpeciesLocations_CreatedAt");
+
+                    b.HasIndex("SpeciesId")
+                        .HasDatabaseName("IX_SpeciesLocations_SpeciesId");
 
                     b.ToTable("SpeciesLocations", (string)null);
                 });
@@ -381,8 +471,14 @@ namespace WildNatureExplorer.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_Users_CreatedAt");
+
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_Users_IsActive");
 
                     b.ToTable("Users", (string)null);
                 });
@@ -400,9 +496,88 @@ namespace WildNatureExplorer.Infrastructure.Migrations
 
                     b.HasKey("UserId", "RoleId");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex("AssignedAt")
+                        .HasDatabaseName("IX_UserRoles_AssignedAt");
+
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("IX_UserRoles_RoleId");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_UserRoles_UserId");
 
                     b.ToTable("UserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("WildNatureExplorer.Domain.Entities.UserSighting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CommonName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ScientificName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("SightedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("SpeciesId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SpeciesId")
+                        .HasDatabaseName("IX_UserSightings_SpeciesId");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_UserSightings_UserId");
+
+                    b.HasIndex("UserId", "SightedAt")
+                        .HasDatabaseName("IX_UserSightings_UserId_SightedAt");
+
+                    b.HasIndex("UserId", "SpeciesId", "SightedAt")
+                        .IsUnique()
+                        .HasDatabaseName("UX_UserSightings_User_Species_SightedAt");
+
+                    b.ToTable("UserSightings", (string)null);
+                });
+
+            modelBuilder.Entity("WildNatureExplorer.Domain.Entities.AiFeedback", b =>
+                {
+                    b.HasOne("WildNatureExplorer.Domain.Entities.AiSession", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("WildNatureExplorer.Domain.Entities.AiMessage", b =>
@@ -414,6 +589,17 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("WildNatureExplorer.Domain.Entities.AiSession", b =>
+                {
+                    b.HasOne("WildNatureExplorer.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("WildNatureExplorer.Domain.Entities.Species", b =>
@@ -510,6 +696,24 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WildNatureExplorer.Domain.Entities.UserSighting", b =>
+                {
+                    b.HasOne("WildNatureExplorer.Domain.Entities.Species", "Species")
+                        .WithMany()
+                        .HasForeignKey("SpeciesId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("WildNatureExplorer.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Species");
 
                     b.Navigation("User");
                 });

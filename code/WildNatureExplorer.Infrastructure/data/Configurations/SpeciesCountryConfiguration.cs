@@ -10,6 +10,12 @@ public class SpeciesCountryConfiguration : IEntityTypeConfiguration<SpeciesCount
 
         builder.HasKey(x => new { x.SpeciesId, x.CountryId });
 
+        builder.HasIndex(x => x.SpeciesId)
+            .HasDatabaseName("IX_SpeciesCountries_SpeciesId");
+
+        builder.HasIndex(x => x.CountryId)
+            .HasDatabaseName("IX_SpeciesCountries_CountryId");
+
         builder.HasOne(x => x.Species)
             .WithMany(x => x.Countries)
             .HasForeignKey(x => x.SpeciesId)
