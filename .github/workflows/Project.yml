@@ -252,12 +252,13 @@ jobs:
       - name: Skip integration tests (workflow input)
         if: ${{ inputs.RUN_INTEGRATION_TESTS != true }}
         run: echo "Skipping integration tests (RUN_INTEGRATION_TESTS=false)."
-
-  azure-db-migrations:
-    name: Apply migrations (Azure Postgres)
+        
+  supabase-db-migrations:
+    name: Apply migrations (Supabase Postgres)
     runs-on: ubuntu-latest
     needs: [integration-tests]
     if: ${{ inputs.SKIP_DEPLOY != true }}
+
     env:
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
@@ -267,6 +268,7 @@ jobs:
       JWT_KEY: ${{ secrets.JWT_KEY }}
       JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
       JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -283,7 +285,7 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
 
-      - name: Apply EF migrations to Azure DB
+      - name: Run EF migrations (Supabase DB)
         run: |
           dotnet ef database update \
             --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
@@ -295,6 +297,49 @@ jobs:
           dotnet ef migrations list \
             --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
             --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+            
+  # azure-db-migrations:
+  #   name: Apply migrations (Azure Postgres)
+  #   runs-on: ubuntu-latest
+  #   needs: [integration-tests]
+  #   if: ${{ inputs.SKIP_DEPLOY != true }}
+  #   env:
+  #     DB_HOST: ${{ secrets.DB_HOST }}
+  #     DB_PORT: ${{ secrets.DB_PORT }}
+  #     DB_NAME: ${{ secrets.DB_NAME }}
+  #     DB_USER: ${{ secrets.DB_USER }}
+  #     DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  #     JWT_KEY: ${{ secrets.JWT_KEY }}
+  #     JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+  #     JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Setup .NET
+  #       uses: actions/setup-dotnet@v3
+  #       with:
+  #         dotnet-version: "8.0.x"
+
+  #     - name: Install dotnet-ef
+  #       run: |
+  #         dotnet tool install --global dotnet-ef --version 8.*
+  #         echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+  #     - name: Restore dependencies
+  #       run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
+  #     - name: Apply EF migrations to Azure DB
+  #       run: |
+  #         dotnet ef database update \
+  #           --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
+  #           --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+  #           --connection "Host=${{ secrets.DB_HOST }};Port=${{ secrets.DB_PORT }};Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }};SSL Mode=Require;Trust Server Certificate=true"
+
+  #     - name: List applied migrations
+  #       run: |
+  #         dotnet ef migrations list \
+  #           --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
+  #           --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
 
   docker-build-api:
     name: Docker — API build & push
