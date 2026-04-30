@@ -9,7 +9,7 @@ public class SafetyPolicyException : Exception
     {
     }
 
-    public SafetyPolicyException(string message, Exception innerException) 
+    public SafetyPolicyException(string message, Exception innerException)
         : base(message, innerException)
     {
     }

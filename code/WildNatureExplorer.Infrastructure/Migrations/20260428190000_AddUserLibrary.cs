@@ -29,16 +29,16 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                 name: "UserSightings",
                 columns: table => new
                 {
-                    Id         = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId     = table.Column<Guid>(type: "uuid", nullable: false),
-                    SpeciesId  = table.Column<Guid>(type: "uuid", nullable: false),
-                    Latitude   = table.Column<double>(type: "double precision", nullable: false),
-                    Longitude  = table.Column<double>(type: "double precision", nullable: false),
-                    ImageUrl   = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
-                    Notes      = table.Column<string>(type: "character varying(500)",  maxLength: 500,  nullable: true),
-                    SightedAt  = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    CreatedAt  = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt  = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    SpeciesId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Latitude = table.Column<double>(type: "double precision", nullable: false),
+                    Longitude = table.Column<double>(type: "double precision", nullable: false),
+                    ImageUrl = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),
+                    Notes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    SightedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
