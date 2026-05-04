@@ -65,7 +65,7 @@ public class PathSimulationService : IPathSimulationService
                 try
                 {
                     command.CommandText = sql;
-                    
+
                     // Add parameters
                     var paramCountry = command.CreateParameter();
                     paramCountry.ParameterName = "@countryId";

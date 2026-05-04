@@ -52,10 +52,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasMany(x => x.UserRoles)
                .WithOne(x => x.User)
                .HasForeignKey(x => x.UserId);
-       
-       builder.Property(x => x.AcceptedTerms)
-            .IsRequired()
-            .HasDefaultValue(false);
+
+        builder.Property(x => x.AcceptedTerms)
+             .IsRequired()
+             .HasDefaultValue(false);
 
         builder.Property(x => x.AcceptedTermsAt)
               .HasColumnType("timestamp with time zone")

@@ -89,19 +89,19 @@ public class UserSightingRepository : IUserSightingRepository
 
                 result.Add(new NearbySightingResponse
                 {
-                    Id              = reader.GetGuid(0),
-                    SpeciesId       = rawSpeciesId == Guid.Empty ? null : rawSpeciesId,
-                    CommonName      = reader.GetString(2),
-                    ScientificName  = reader.GetString(3),
-                    IsDangerous     = reader.GetBoolean(4),
-                    IsRare          = reader.GetBoolean(5),
-                    Latitude        = reader.GetDouble(6),
-                    Longitude       = reader.GetDouble(7),
-                    ImageUrl        = reader.IsDBNull(8) ? null : reader.GetString(8),
-                    Notes           = reader.IsDBNull(9) ? null : reader.GetString(9),
-                    SightedAt       = reader.GetDateTime(10),
-                    CreatedAt       = reader.GetDateTime(11),
-                    DistanceKm      = Convert.ToDouble(reader.GetValue(12))
+                    Id = reader.GetGuid(0),
+                    SpeciesId = rawSpeciesId == Guid.Empty ? null : rawSpeciesId,
+                    CommonName = reader.GetString(2),
+                    ScientificName = reader.GetString(3),
+                    IsDangerous = reader.GetBoolean(4),
+                    IsRare = reader.GetBoolean(5),
+                    Latitude = reader.GetDouble(6),
+                    Longitude = reader.GetDouble(7),
+                    ImageUrl = reader.IsDBNull(8) ? null : reader.GetString(8),
+                    Notes = reader.IsDBNull(9) ? null : reader.GetString(9),
+                    SightedAt = reader.GetDateTime(10),
+                    CreatedAt = reader.GetDateTime(11),
+                    DistanceKm = Convert.ToDouble(reader.GetValue(12))
                 });
             }
             return result;

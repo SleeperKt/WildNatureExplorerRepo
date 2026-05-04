@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>9dde874e-151a-4a73-9010-eea25bdca77e</UserSecretsId>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- XML docs not maintained on every controller/middleware; Swagger still works without per-member comments. -->
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\requirements\AI\docs\knowledge_chunks.json" Link="docs\ai\knowledge_chunks.json">
+    <Content Update="docs\ai\knowledge_chunks.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

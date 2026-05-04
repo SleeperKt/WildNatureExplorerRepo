@@ -18,27 +18,27 @@ public class TermsMiddleware
     public async Task Invoke(HttpContext context, IUserRepository userRepository)
     {
         var endpoint = context.GetEndpoint();
-        
+
         var path = context.Request.Path.Value?.ToLower();
 
-            var bypassPaths = new[]
-            {
+        var bypassPaths = new[]
+        {
                 "/api/auth/login",
                 "/api/auth/register",
                 "/api/auth/accept-terms"
             };
 
-            if (endpoint?.Metadata?.GetMetadata<Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute>() != null)
-            {
-                await _next(context);
-                return;
-            }
+        if (endpoint?.Metadata?.GetMetadata<Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute>() != null)
+        {
+            await _next(context);
+            return;
+        }
 
-            if (bypassPaths.Any(p => path?.StartsWith(p) == true))
-            {
-                await _next(context);
-                return;
-            }
+        if (bypassPaths.Any(p => path?.StartsWith(p) == true))
+        {
+            await _next(context);
+            return;
+        }
 
         // пропускаем анонимные эндпоинты (login/register)
         if (endpoint?.Metadata?.GetMetadata<Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute>() != null)

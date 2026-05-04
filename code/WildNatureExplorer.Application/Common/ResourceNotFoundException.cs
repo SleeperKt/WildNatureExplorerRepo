@@ -8,7 +8,7 @@ public class ResourceNotFoundException : Exception
     public string ResourceType { get; set; }
     public string ResourceId { get; set; }
 
-    public ResourceNotFoundException(string resourceType, string resourceId) 
+    public ResourceNotFoundException(string resourceType, string resourceId)
         : base($"{resourceType} with ID '{resourceId}' not found.")
     {
         ResourceType = resourceType;

@@ -17,7 +17,7 @@ public class ValidationException : Exception
         ErrorCode = errorCode;
     }
 
-    public ValidationException(string message, Exception innerException) 
+    public ValidationException(string message, Exception innerException)
         : base(message, innerException)
     {
     }

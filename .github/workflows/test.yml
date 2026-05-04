@@ -1,6 +1,7 @@
 name: Test Environment CI/CD
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - test
@@ -10,7 +11,7 @@ on:
 
 jobs:
   test-pipeline:
-    uses: ./.github/workflows/Backend.yml
+    uses: ./.github/workflows/Project.yml
     with:
       ENVIRONMENT: test
       SKIP_DB_SETUP: false
@@ -27,8 +28,6 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
-      AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
       DB_NAME: ${{ secrets.DB_NAME }}
@@ -39,3 +38,4 @@ jobs:
       CORS_ORIGINS: ${{ secrets.CORS_ORIGINS }}
       AZURE_WEBAPP_API_NAME: ${{ secrets.AZURE_WEBAPP_API_NAME }}
       AZURE_WEBAPP_FRONTEND_NAME: ${{ secrets.AZURE_WEBAPP_FRONTEND_NAME }}
+      WNE_FRONTEND_PUBLIC_URL: ${{ secrets.WNE_FRONTEND_PUBLIC_URL }}
