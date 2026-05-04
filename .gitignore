@@ -10,11 +10,10 @@ out/
 testdocs/
 
 requirements/
-flutter_app/
-android/
+android-alert-app/
 docs(not)/
-
-.idea/
+problem/
+documentation/
 
 *.dll
 *.exe
