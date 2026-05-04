@@ -1,11 +1,2 @@
-bin/
-obj/
-.vs/
-*.user
-*.suo
-
-.git/
-.gitignore
-
-docker-compose.override.yml
-.env
+# Deprecated for builds: Docker reads `.dockerignore` from the **build context root**
+# (repository root when using `docker-compose.yml`). Rules live in `/.dockerignore`.

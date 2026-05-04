@@ -1,0 +1,45 @@
+# Build context is the repository root (see docker-compose.yml).
+# Keep paths needed by docker/Dockerfile and frontend/Dockerfile: code/, frontend/, docker/
+
+# Version control & IDE
+.git
+.gitattributes
+.github
+.idea
+.vs
+*.user
+*.suo
+
+# Never ship local secrets into the daemon context
+.env
+.env.local
+.env.*.local
+
+# Compose overrides that may pin machine-specific paths
+docker-compose.override.yml
+
+# .NET build outputs (restored & built inside the image)
+**/bin/
+**/obj/
+**/out/
+**/publish/
+**/TestResults/
+
+# Frontend — reinstall inside Docker
+frontend/node_modules/
+frontend/dist/
+
+# Optional tooling trees not used by API/web images
+android-alert-app/
+documentation/
+problem/
+docs(not)/
+
+# Logs & caches that should not invalidate layers meaninglessly
+**/logs/
+*.log
+**/.npm/
+**/packages/
+
+# Misc heavy / irrelevant for container build
+*.pdf

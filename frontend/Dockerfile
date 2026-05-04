@@ -13,6 +13,7 @@ ENV VITE_API_URL=$WNE_API_PUBLIC_BASE_URL
 RUN npm run build
 
 FROM nginx:1.27-alpine AS final
+RUN apk add --no-cache wget
 COPY docker/nginx-frontend.default.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/frontend/dist /usr/share/nginx/html
 EXPOSE 80
