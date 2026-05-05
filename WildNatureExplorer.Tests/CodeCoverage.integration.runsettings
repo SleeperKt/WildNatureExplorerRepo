@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Exclude>[WildNatureExplorer.Tests]*</Exclude>
+          <ExcludeByFile>**/WildNatureExplorer.Infrastructure/Migrations/**/*.cs</ExcludeByFile>
+          <!-- Integration exercises repositories: Domain + Application + Infrastructure (no CI gate — informational HTML). -->
+          <Include>[WildNatureExplorer.Domain]*,[WildNatureExplorer.Application]*,[WildNatureExplorer.Infrastructure]*</Include>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

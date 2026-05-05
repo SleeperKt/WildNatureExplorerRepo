@@ -30,7 +30,8 @@ public class UserService : IUserService
 
         user.UpdateProfile(updateDto.FirstName, updateDto.LastName, updateDto.Email);
         var existingUser = await _userRepository.GetByEmailAsync(updateDto.Email);
-        if (existingUser != null) throw new ValidationException("Email already in use", "EMAIL_ALREADY_IN_USE");
+        if (existingUser != null && existingUser.Id != userId)
+            throw new ValidationException("Email already in use", "EMAIL_ALREADY_IN_USE");
         await _userRepository.UpdateAsync(user);
     }
 

@@ -33,7 +33,8 @@ public class AdminService : IAdminService
     public async Task AssignModeratorRoleAsync(Guid adminId, Guid userId)
     {
         var admin = await _userRepository.GetByIdAsync(adminId);
-        if (admin == null || !admin.UserRoles.Any(ur => ur.Role.RoleName == "Admin"))
+        var adminRole = await _roleRepository.GetByNameAsync("Admin");
+        if (admin == null || adminRole == null || !admin.UserRoles.Any(ur => ur.RoleId == adminRole.Id))
             throw new UnauthorizedAccessException("Only Admin can assign Moderator role.");
 
         var user = await _userRepository.GetByIdAsync(userId);
