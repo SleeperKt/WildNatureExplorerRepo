@@ -1,44 +1,44 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { api } from "../api/client";
-import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import SaveSightingModal from "../components/SaveSightingModal";
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { api } from '../api/client';
+import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import SaveSightingModal from '../components/SaveSightingModal';
 
 // Eagle SVG imports - A, B, C frames for wing animation
-import eagleA from "../images/Animal/Eagle/EagleA.svg";
-import eagleB from "../images/Animal/Eagle/EagleB.svg";
-import eagleC from "../images/Animal/Eagle/EagleC.svg";
+import eagleA from '../images/Animal/Eagle/EagleA.svg';
+import eagleB from '../images/Animal/Eagle/EagleB.svg';
+import eagleC from '../images/Animal/Eagle/EagleC.svg';
 
 // Cloud images - 7 types for variety
-import cloudA from "../images/Nature/clouds/CloudA-removebg-preview.png";
-import cloudB from "../images/Nature/clouds/CloudB-removebg-preview.png";
-import cloudC from "../images/Nature/clouds/CloudC-removebg-preview.png";
-import cloudD from "../images/Nature/clouds/CloudD-removebg-preview.png";
-import cloudE from "../images/Nature/clouds/CloudE-removebg-preview.png";
-import cloudF from "../images/Nature/clouds/CloudF-removebg-preview.png";
-import cloudG from "../images/Nature/clouds/CloudG-removebg-preview.png";
+import cloudA from '../images/Nature/clouds/CloudA-removebg-preview.png';
+import cloudB from '../images/Nature/clouds/CloudB-removebg-preview.png';
+import cloudC from '../images/Nature/clouds/CloudC-removebg-preview.png';
+import cloudD from '../images/Nature/clouds/CloudD-removebg-preview.png';
+import cloudE from '../images/Nature/clouds/CloudE-removebg-preview.png';
+import cloudF from '../images/Nature/clouds/CloudF-removebg-preview.png';
+import cloudG from '../images/Nature/clouds/CloudG-removebg-preview.png';
 
 const CLOUD_IMAGES = [cloudA, cloudB, cloudC, cloudD, cloudE, cloudF, cloudG];
 
 // Bird size presets (realistic scaling)
 const BIRD_SIZES = [
-  { width: 120, height: 75 },   // Small distant bird
-  { width: 150, height: 95 },   // Medium-small
-  { width: 180, height: 115 },  // Medium
-  { width: 210, height: 130 },  // Medium-large
-  { width: 240, height: 150 },  // Large close bird
+  { width: 120, height: 75 }, // Small distant bird
+  { width: 150, height: 95 }, // Medium-small
+  { width: 180, height: 115 }, // Medium
+  { width: 210, height: 130 }, // Medium-large
+  { width: 240, height: 150 }, // Large close bird
 ];
 
 // Cloud size presets - wider range for realism
 const CLOUD_SIZES = [
-  { width: 150, height: 90 },   // Tiny wisp
-  { width: 220, height: 130 },  // Small
-  { width: 320, height: 190 },  // Medium-small
-  { width: 450, height: 270 },  // Medium
-  { width: 580, height: 350 },  // Large
-  { width: 750, height: 450 },  // Very large
-  { width: 900, height: 540 },  // Massive
+  { width: 150, height: 90 }, // Tiny wisp
+  { width: 220, height: 130 }, // Small
+  { width: 320, height: 190 }, // Medium-small
+  { width: 450, height: 270 }, // Medium
+  { width: 580, height: 350 }, // Large
+  { width: 750, height: 450 }, // Very large
+  { width: 900, height: 540 }, // Massive
 ];
 
 export default function AiPage() {
@@ -47,18 +47,18 @@ export default function AiPage() {
   const [sessionId, setSessionId] = useState(null);
   const [currentAnimal, setCurrentAnimal] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [question, setQuestion] = useState("");
+  const [question, setQuestion] = useState('');
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
+  const [comment, setComment] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isAsking, setIsAsking] = useState(false);
-  const [recognizer, setRecognizer] = useState("huggingface");
+  const [recognizer, setRecognizer] = useState('huggingface');
   const [birds, setBirds] = useState([]);
   const [clouds, setClouds] = useState([]);
   const [saveOpen, setSaveOpen] = useState(false);
-  const [saveToast, setSaveToast] = useState("");
+  const [saveToast, setSaveToast] = useState('');
 
   const chatRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -87,12 +87,15 @@ export default function AiPage() {
       createdAt: Date.now(),
     };
 
-    setBirds(prev => [...prev, newBird]);
+    setBirds((prev) => [...prev, newBird]);
 
     // Remove bird after animation completes
-    setTimeout(() => {
-      setBirds(prev => prev.filter(b => b.id !== id));
-    }, flightDuration * 1000 + 500);
+    setTimeout(
+      () => {
+        setBirds((prev) => prev.filter((b) => b.id !== id));
+      },
+      flightDuration * 1000 + 500
+    );
   }, []);
 
   // Random bird spawning system
@@ -142,12 +145,15 @@ export default function AiPage() {
       createdAt: Date.now(),
     };
 
-    setClouds(prev => [...prev, newCloud]);
+    setClouds((prev) => [...prev, newCloud]);
 
     // Remove cloud after animation completes
-    setTimeout(() => {
-      setClouds(prev => prev.filter(c => c.id !== id));
-    }, driftDuration * 1000 + 500);
+    setTimeout(
+      () => {
+        setClouds((prev) => prev.filter((c) => c.id !== id));
+      },
+      driftDuration * 1000 + 500
+    );
   }, []);
 
   // Cloud spawning system
@@ -180,20 +186,25 @@ export default function AiPage() {
         const res = await api.post(`/api/ai/start`);
         if (mounted) setSessionId(res.data.sessionId);
       } catch (err) {
-        console.warn("Failed to start AI session on mount:", err);
+        console.warn('Failed to start AI session on mount:', err);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    if (chatRef.current)
+      chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [messages]);
 
   useEffect(() => {
     return () => {
       if (sessionId) {
-        void api.post(`/api/ai/end/${sessionId}`).catch((err) => console.error("Failed to end session:", err));
+        void api
+          .post(`/api/ai/end/${sessionId}`)
+          .catch((err) => console.error('Failed to end session:', err));
       }
       if (createdUrlsRef.current.length) {
         createdUrlsRef.current.forEach((u) => {
@@ -229,17 +240,21 @@ export default function AiPage() {
 
   const analyze = async () => {
     if (!file) return;
-    if (!sessionId) return alert("Session not ready. Please wait or refresh the page.");
+    if (!sessionId)
+      return alert('Session not ready. Please wait or refresh the page.');
 
     setIsAnalyzing(true);
     const form = new FormData();
-    form.append("image", file);
+    form.append('image', file);
 
     try {
-      const res = await api.post(`/api/ai/analyze/${sessionId}?recognizer=${encodeURIComponent(recognizer)}`, form);
+      const res = await api.post(
+        `/api/ai/analyze/${sessionId}?recognizer=${encodeURIComponent(recognizer)}`,
+        form
+      );
       const newSessionId = res.data.sessionId;
       if (!sessionId) setSessionId(newSessionId);
-      
+
       const animal = res.data.animal;
       setCurrentAnimal(animal);
       const fileUrl = URL.createObjectURL(file);
@@ -247,15 +262,21 @@ export default function AiPage() {
       setMessages((prev) => [
         ...prev,
         {
-          type: "bot",
+          type: 'bot',
           content: (
             <>
               <p className="ai-animal-name">{animal.name}</p>
               <p className="ai-animal-desc">{animal.description}</p>
               <div className="ai-animal-details">
-                <span><strong>Habitat:</strong> {animal.habitat || "—"}</span>
-                <span><strong>Risk to humans:</strong> {animal.dangerLevel || "—"}</span>
-                <span><strong>Wild population:</strong> {animal.rarityLevel || "—"}</span>
+                <span>
+                  <strong>Habitat:</strong> {animal.habitat || '—'}
+                </span>
+                <span>
+                  <strong>Risk to humans:</strong> {animal.dangerLevel || '—'}
+                </span>
+                <span>
+                  <strong>Wild population:</strong> {animal.rarityLevel || '—'}
+                </span>
               </div>
             </>
           ),
@@ -267,10 +288,10 @@ export default function AiPage() {
       const payload = err.response?.data;
       const code = payload?.errorCode ?? payload?.ErrorCode;
       const hint =
-        err.response?.status === 400 && code === "AI_SESSION_INVALID"
-          ? " Session invalid — start a new chat (refresh or click new session flow)."
-          : "";
-      alert("Analysis failed: " + (payload?.message || err.message) + hint);
+        err.response?.status === 400 && code === 'AI_SESSION_INVALID'
+          ? ' Session invalid — start a new chat (refresh or click new session flow).'
+          : '';
+      alert('Analysis failed: ' + (payload?.message || err.message) + hint);
     } finally {
       setIsAnalyzing(false);
     }
@@ -279,13 +300,13 @@ export default function AiPage() {
   const ask = async () => {
     if (!question.trim() || isAsking) return;
 
-    setMessages((prev) => [...prev, { type: "user", content: question }]);
+    setMessages((prev) => [...prev, { type: 'user', content: question }]);
     setIsAsking(true);
-    
+
     try {
       let finalQuestion = question;
       if (currentAnimal) {
-        finalQuestion = `We are discussing ${currentAnimal.name}. Context: ${currentAnimal.description || "(no extra summary)"} Habitat: ${currentAnimal.habitat || "unknown"}. Risk to humans: ${currentAnimal.dangerLevel || "unknown"}. Wild population rarity: ${currentAnimal.rarityLevel || "unknown"}. User question: ${question}`;
+        finalQuestion = `We are discussing ${currentAnimal.name}. Context: ${currentAnimal.description || '(no extra summary)'} Habitat: ${currentAnimal.habitat || 'unknown'}. Risk to humans: ${currentAnimal.dangerLevel || 'unknown'}. Wild population rarity: ${currentAnimal.rarityLevel || 'unknown'}. User question: ${question}`;
       }
 
       let sid = sessionId;
@@ -295,33 +316,46 @@ export default function AiPage() {
         setSessionId(sid);
       }
 
-      const res = await api.post(`/api/ai/ask/${sid}`, { questionAboutNature: finalQuestion });
-      let answerText = res.data.answer || "No answer received";
+      const res = await api.post(`/api/ai/ask/${sid}`, {
+        questionAboutNature: finalQuestion,
+      });
+      let answerText = res.data.answer || 'No answer received';
 
       const formattedAnswer = answerText
-        .split("\n")
+        .split('\n')
         .filter(Boolean)
         .map((line, idx) => {
-          let trimmed = line.trim().replace(/\*\*/g, "");
-          if (/^(Risk to humans|Danger Level|Habitat|Wild population|Rarity|Classification|Height|Weight|Diet|Social Structure|Conservation Status|Interesting Fact)/i.test(trimmed)) {
-            return <p key={idx} className="ai-highlight">{trimmed}</p>;
+          let trimmed = line.trim().replace(/\*\*/g, '');
+          if (
+            /^(Risk to humans|Danger Level|Habitat|Wild population|Rarity|Classification|Height|Weight|Diet|Social Structure|Conservation Status|Interesting Fact)/i.test(
+              trimmed
+            )
+          ) {
+            return (
+              <p key={idx} className="ai-highlight">
+                {trimmed}
+              </p>
+            );
           }
           return <p key={idx}>{trimmed}</p>;
         });
 
-      setMessages((prev) => [...prev, { type: "bot", content: formattedAnswer }]);
-      setQuestion("");
+      setMessages((prev) => [
+        ...prev,
+        { type: 'bot', content: formattedAnswer },
+      ]);
+      setQuestion('');
     } catch (err) {
       const st = err.response?.status;
       const payload = err.response?.data;
       const tid = payload?.traceId ?? payload?.TraceId;
       const msg =
         st === 429
-          ? "Too many requests — wait briefly and retry (AI rate limiting)."
-          : (typeof payload === "object" && payload?.message)
+          ? 'Too many requests — wait briefly and retry (AI rate limiting).'
+          : typeof payload === 'object' && payload?.message
             ? payload.message
             : err.message;
-      alert("Failed to get answer: " + msg + (tid ? ` (trace: ${tid})` : ""));
+      alert('Failed to get answer: ' + msg + (tid ? ` (trace: ${tid})` : ''));
     } finally {
       setIsAsking(false);
     }
@@ -332,17 +366,24 @@ export default function AiPage() {
     try {
       await api.post(`/api/ai/feedback/${sessionId}`, { rating, comment });
       setFeedbackOpen(false);
-      alert("Feedback sent!");
-      setComment("");
+      alert('Feedback sent!');
+      setComment('');
       setRating(5);
     } catch (err) {
-      alert("Feedback failed: " + (err.response?.data?.message || err.message));
+      alert('Feedback failed: ' + (err.response?.data?.message || err.message));
     }
   };
 
   // Icons
   const UploadIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
       <polyline points="17 8 12 3 7 8" />
       <line x1="12" y1="3" x2="12" y2="15" />
@@ -350,26 +391,54 @@ export default function AiPage() {
   );
 
   const SendIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <line x1="22" y1="2" x2="11" y2="13" />
       <polygon points="22 2 15 22 11 13 2 9 22 2" />
     </svg>
   );
 
   const SparkleIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z" />
     </svg>
   );
 
   const FeedbackIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
     </svg>
   );
 
   const BookmarkIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
     </svg>
   );
@@ -379,7 +448,7 @@ export default function AiPage() {
       {/* Random Bird Animation */}
       <div className="eagle-bg">
         {/* Clouds layer (behind birds) */}
-        {clouds.map(cloud => (
+        {clouds.map((cloud) => (
           <div
             key={`cloud-${cloud.id}`}
             className={`cloud ${cloud.fromLeft ? 'drift-left-to-right' : 'drift-right-to-left'}`}
@@ -396,7 +465,7 @@ export default function AiPage() {
           </div>
         ))}
         {/* Birds layer (in front of clouds) */}
-        {birds.map(bird => (
+        {birds.map((bird) => (
           <div
             key={bird.id}
             className={`bird ${bird.fromLeft ? 'fly-left-to-right' : 'fly-right-to-left'}`}
@@ -423,11 +492,12 @@ export default function AiPage() {
           {/* Left Panel - Upload & Controls */}
           <div className="ai-sidebar">
             <div className="ai-sidebar-header">
-              <div className="ai-sidebar-icon">
-                {SparkleIcon}
-              </div>
+              <div className="ai-sidebar-icon">{SparkleIcon}</div>
               <h2>AI Wildlife Assistant</h2>
-              <p>Upload an image to identify wildlife or ask questions about nature</p>
+              <p>
+                Upload an image to identify wildlife or ask questions about
+                nature
+              </p>
             </div>
 
             {sessionId && (
@@ -440,12 +510,16 @@ export default function AiPage() {
             {currentAnimal && (
               <div className="ai-current-animal">
                 <span className="ai-animal-icon">🦁</span>
-                <span>Discussing: <strong>{currentAnimal.name}</strong></span>
+                <span>
+                  Discussing: <strong>{currentAnimal.name}</strong>
+                </span>
               </div>
             )}
 
             {/* Drop Zone */}
-            <label className="ai-label" htmlFor="recognizer-select">Recognition Model</label>
+            <label className="ai-label" htmlFor="recognizer-select">
+              Recognition Model
+            </label>
             <select
               id="recognizer-select"
               className="ai-textarea"
@@ -456,7 +530,7 @@ export default function AiPage() {
               <option value="animaldetect">AnimalDetect</option>
             </select>
 
-            <div 
+            <div
               className={`ai-dropzone ${isDragOver ? 'drag-over' : ''} ${file ? 'has-file' : ''}`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
@@ -484,9 +558,9 @@ export default function AiPage() {
               )}
             </div>
 
-            <button 
+            <button
               className="ai-btn ai-btn-primary"
-              onClick={analyze} 
+              onClick={analyze}
               disabled={!file || isAnalyzing}
             >
               {isAnalyzing ? (
@@ -513,18 +587,18 @@ export default function AiPage() {
               </button>
             )}
 
-            <button 
+            <button
               className="ai-btn ai-btn-secondary"
-              onClick={() => setFeedbackOpen(true)} 
+              onClick={() => setFeedbackOpen(true)}
               disabled={!sessionId}
             >
               {FeedbackIcon}
               Give Feedback
             </button>
 
-            <button 
+            <button
               className="ai-btn ai-btn-outline"
-              onClick={() => navigate("/")}
+              onClick={() => navigate('/')}
             >
               ← Back to Home
             </button>
@@ -542,7 +616,10 @@ export default function AiPage() {
                 <div className="ai-chat-empty">
                   <div className="ai-chat-empty-icon">🌿</div>
                   <h4>Start a Conversation</h4>
-                  <p>Upload an image to identify wildlife or ask a question about nature below</p>
+                  <p>
+                    Upload an image to identify wildlife or ask a question about
+                    nature below
+                  </p>
                 </div>
               ) : (
                 messages.map((msg, idx) => (
@@ -552,7 +629,11 @@ export default function AiPage() {
                     )}
                     <div className="ai-message-content">
                       {msg.isImage && msg.fileUrl && (
-                        <img src={msg.fileUrl} alt="Uploaded" className="ai-message-image" />
+                        <img
+                          src={msg.fileUrl}
+                          alt="Uploaded"
+                          className="ai-message-image"
+                        />
                       )}
                       <div className="ai-message-text">{msg.content}</div>
                     </div>
@@ -570,15 +651,19 @@ export default function AiPage() {
                 placeholder="Ask about wildlife, habitats, conservation..."
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && ask()}
+                onKeyDown={(e) => e.key === 'Enter' && ask()}
                 disabled={isAsking}
               />
-              <button 
+              <button
                 className="ai-send-btn"
                 onClick={ask}
                 disabled={!question.trim() || isAsking}
               >
-                {isAsking ? <span className="ai-spinner small"></span> : SendIcon}
+                {isAsking ? (
+                  <span className="ai-spinner small"></span>
+                ) : (
+                  SendIcon
+                )}
               </button>
             </div>
           </div>
@@ -591,25 +676,32 @@ export default function AiPage() {
       <SaveSightingModal
         isOpen={saveOpen}
         onClose={() => setSaveOpen(false)}
-        initialAnimalName={currentAnimal?.name || ""}
+        initialAnimalName={currentAnimal?.name || ''}
         sessionId={sessionId}
         recognizedImage={file}
         onSaved={() => {
           setSaveOpen(false);
           setSaveToast(`Saved "${currentAnimal?.name}" to your library`);
-          setTimeout(() => setSaveToast(""), 4000);
+          setTimeout(() => setSaveToast(''), 4000);
         }}
       />
 
       {saveToast && (
         <div className="save-toast">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <polyline points="20 6 9 17 4 12" />
           </svg>
           <span>{saveToast}</span>
           <button
             className="save-toast-link"
-            onClick={() => navigate("/library")}
+            onClick={() => navigate('/library')}
           >
             View library →
           </button>
@@ -618,10 +710,18 @@ export default function AiPage() {
 
       {/* Feedback Modal */}
       {feedbackOpen && (
-        <div className="ai-modal-overlay" onClick={() => setFeedbackOpen(false)}>
+        <div
+          className="ai-modal-overlay"
+          onClick={() => setFeedbackOpen(false)}
+        >
           <div className="ai-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="ai-modal-close" onClick={() => setFeedbackOpen(false)}>×</button>
-            
+            <button
+              className="ai-modal-close"
+              onClick={() => setFeedbackOpen(false)}
+            >
+              ×
+            </button>
+
             <div className="ai-modal-header">
               <div className="ai-modal-icon">{FeedbackIcon}</div>
               <h3>Share Your Feedback</h3>

@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom";
-import grassA from "../images/Nature/grass-A.svg";
-import grassB from "../images/Nature/grass-B.svg";
+import { Link } from 'react-router-dom';
+import grassA from '../images/Nature/grass-A.svg';
+import grassB from '../images/Nature/grass-B.svg';
 
 export default function Footer() {
   return (
@@ -21,14 +21,22 @@ export default function Footer() {
       <div className="footer-container">
         <div className="footer-brand">
           <Link to="/" className="footer-logo">
-            <svg className="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              className="logo-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M12 2L2 7l10 5 10-5-10-5z" />
               <path d="M2 17l10 5 10-5" />
               <path d="M2 12l10 5 10-5" />
             </svg>
             <span>WildNature Explorer</span>
           </Link>
-          <p className="footer-tagline">Discover the wonders of wildlife around the world</p>
+          <p className="footer-tagline">
+            Discover the wonders of wildlife around the world
+          </p>
         </div>
 
         <div className="footer-links">
@@ -46,8 +54,20 @@ export default function Footer() {
           </div>
           <div className="footer-column">
             <h4>Connect</h4>
-            <a href="https://github.com/SleeperKt/WildNatureExplorerRepo" target="_blank" rel="noopener noreferrer">GitHub</a>
-            <a href="https://x.com/NatureWiil50398" target="_blank" rel="noopener noreferrer">X (Twitter)</a>
+            <a
+              href="https://github.com/SleeperKt/WildNatureExplorerRepo"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://x.com/NatureWiil50398"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              X (Twitter)
+            </a>
             <a href="mailto:wiildnatureexplorer@gmail.com">Contact</a>
           </div>
         </div>

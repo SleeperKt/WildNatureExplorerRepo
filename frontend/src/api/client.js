@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from 'axios';
 
 // Empty baseURL + paths like `/api/...`:
 // - Local Vite dev: same-origin `/api` is proxied to the API (vite.config.js).
@@ -7,9 +7,9 @@ import axios from "axios";
 //
 // Optional `VITE_DEV_TUNNEL_API_URL`: temporary tunnel/ngrok-style base URL for manual debugging only — do not set in prod CI images.
 const baseURL =
-  (import.meta.env.VITE_API_URL || "").trim() ||
-  (import.meta.env.VITE_DEV_TUNNEL_API_URL || "").trim() ||
-  "";
+  (import.meta.env.VITE_API_URL || '').trim() ||
+  (import.meta.env.VITE_DEV_TUNNEL_API_URL || '').trim() ||
+  '';
 
 export const api = axios.create({
   baseURL,
@@ -22,7 +22,7 @@ export const setGlobalErrorHandler = (handler) => {
 };
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -34,7 +34,7 @@ api.interceptors.response.use(
   (error) => {
     if (!error.response && globalErrorHandler) {
       globalErrorHandler(
-        "Cannot connect to server. Please check your internet connection and try again."
+        'Cannot connect to server. Please check your internet connection and try again.'
       );
     }
     throw error;
