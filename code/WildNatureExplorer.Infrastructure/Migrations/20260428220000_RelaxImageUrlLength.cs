@@ -4,12 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace WildNatureExplorer.Infrastructure.Migrations
 {
-    /// <summary>
-    /// Relaxes <c>UserSightings.ImageUrl</c> from <c>varchar(2048)</c> to
-    /// <c>text</c> so we can store the original photo as a base64 data URL
-    /// (the recognized image the user already uploaded — they don't need
-    /// the AI to invent a Wikipedia URL).
-    /// </summary>
+    /// <summary>Widen <c>UserSightings.ImageUrl</c> to <c>text</c> for long values (e.g. data URLs).</summary>
     public partial class RelaxImageUrlLength : Migration
     {
         /// <inheritdoc />

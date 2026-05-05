@@ -3,18 +3,7 @@ using WildNatureExplorer.Domain.Base;
 namespace WildNatureExplorer.Domain.Entities;
 
 /// <summary>
-/// A single animal saved by a user into their personal library
-/// (image already produced by the AI recognition flow + GPS coordinates).
-///
-/// <para>
-/// <b>Species linkage</b> — when the recognized name matches an entry in the
-/// curated <see cref="Species"/> table, <see cref="SpeciesId"/> is filled and
-/// the sighting inherits the species' rich metadata (rarity, danger, scientific
-/// name…). When the AI returns a species we don't have catalogued yet (e.g.
-/// "Hartebeest"), we still let the user save it: <see cref="SpeciesId"/> is
-/// <c>null</c>, and we keep the recognized name on the row itself via
-/// <see cref="CommonName"/> / <see cref="ScientificName"/>.
-/// </para>
+/// User-saved sighting: optional link to <see cref="Species"/> when recognised name matches the catalogue; otherwise <see cref="SpeciesId"/> is null and names live on this row.
 /// </summary>
 public class UserSighting : Entity
 {

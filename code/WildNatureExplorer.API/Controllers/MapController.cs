@@ -1,10 +1,15 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using WildNatureExplorer.Application.DTOs.Geo;
 using WildNatureExplorer.Application.Interfaces.Repositories;
 using WildNatureExplorer.Application.Interfaces.Services;
 
 namespace WildNatureExplorer.API.Controllers;
 
+/// <summary>
+/// Geo/map endpoints: species locations per country, danger overlays, proximity checks, and route simulation.
+/// </summary>
 [ApiController]
 [Route("api/map")]
 public class MapController : ControllerBase
@@ -27,11 +32,12 @@ public class MapController : ControllerBase
     /// Get all species points for a country with full details
     /// </summary>
     [HttpGet("country/{countryId:guid}")]
+    [SwaggerOperation(Summary = "Map markers for all species in a country (optional dangerous/rare filter query).")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByCountry(Guid countryId, [FromQuery] string? filter = null)
     {
         var species = await _speciesRepository.GetByCountryAsync(countryId);
 
-        // Apply filter if specified
         if (!string.IsNullOrEmpty(filter))
         {
             species = filter.ToLower() switch
@@ -62,6 +68,8 @@ public class MapController : ControllerBase
     /// Get only dangerous species with their locations for danger mode
     /// </summary>
     [HttpGet("country/{countryId:guid}/dangerous")]
+    [SwaggerOperation(Summary = "Dangerous-species locations only for map danger layer.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetDangerousByCountry(Guid countryId)
     {
         var species = await _speciesRepository.GetByCountryAsync(countryId);
@@ -78,7 +86,7 @@ public class MapController : ControllerBase
             l.Latitude,
             l.Longitude,
             LocationDescription = l.Description,
-            DangerRadiusKm = 10.0 // Default 10km danger radius
+            DangerRadiusKm = 10.0
         }));
 
         return Ok(points);
@@ -88,6 +96,9 @@ public class MapController : ControllerBase
     /// Search for a specific animal in a country
     /// </summary>
     [HttpGet("country/{countryId:guid}/search")]
+    [SwaggerOperation(Summary = "Search species by substring within one country.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SearchInCountry(Guid countryId, [FromQuery] string query)
     {
         if (string.IsNullOrWhiteSpace(query))
@@ -125,6 +136,9 @@ public class MapController : ControllerBase
     /// Get country bounds for map focusing
     /// </summary>
     [HttpGet("country/{countryId:guid}/bounds")]
+    [SwaggerOperation(Summary = "Bounding box and centroid derived from occurrence points.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetCountryBounds(Guid countryId)
     {
         var country = await _countryRepository.GetByIdAsync(countryId);
@@ -170,6 +184,9 @@ public class MapController : ControllerBase
     /// Check proximity to dangerous animals
     /// </summary>
     [HttpPost("proximity-check")]
+    [SwaggerOperation(Summary = "Alert when user coordinates fall inside danger radius near hazardous species.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CheckProximity([FromBody] ProximityCheckRequest request)
     {
         if (request.CountryId == Guid.Empty)
@@ -227,6 +244,9 @@ public class MapController : ControllerBase
     /// Supports both database-driven (PostgreSQL) and client-side simulation modes
     /// </summary>
     [HttpPost("simulate-path")]
+    [SwaggerOperation(Summary = "Simulate movement through waypoints and evaluate danger segments (database or client mode).")]
+    [ProducesResponseType(typeof(PathSimulationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SimulatePath([FromBody] PathSimulationRequest request)
     {
         if (request.CountryId == Guid.Empty)
@@ -241,7 +261,7 @@ public class MapController : ControllerBase
             {
                 "database" => await _pathSimulationService.SimulatePathDatabaseAsync(request),
                 "client" => await _pathSimulationService.SimulatePathClientAsync(request),
-                _ => await _pathSimulationService.SimulatePathClientAsync(request) // Default to client
+                _ => await _pathSimulationService.SimulatePathClientAsync(request)
             };
 
             return Ok(result);

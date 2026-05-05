@@ -107,10 +107,7 @@ public class AnimalDetectVisionService
         return labelProp.GetString() ?? "unknown animal";
     }
 
-    /// <summary>
-    /// Builds multipart/form-data manually with CRLF (\r\n) everywhere — same as curl/libcurl.
-    /// Field order: image, country, threshold (matches common curl examples).
-    /// </summary>
+    /// <summary>multipart/form-data body for downstream HTTP expectations.</summary>
     private static ByteArrayContent BuildManualMultipart(
         byte[] imageBytes,
         string mimeType,
@@ -118,10 +115,8 @@ public class AnimalDetectVisionService
         string country,
         string thresholdStr)
     {
-        // ASCII-only boundary keeps Content-Type header simple for picky parsers.
         var boundary = "----------------------------" + Guid.NewGuid().ToString("N");
 
-        // Escape quotes in filename (unlikely for our generated names).
         var safeFile = (filename ?? "upload.jpg").Replace("\\", "\\\\").Replace("\"", "\\\"");
 
         var sb = new StringBuilder(capacity: 512);
@@ -152,8 +147,6 @@ public class AnimalDetectVisionService
         Buffer.BlockCopy(suffix, 0, buffer, prefix.Length + imageBytes.Length, suffix.Length);
 
         var body = new ByteArrayContent(buffer);
-        // Boundary must appear exactly once in the header; quote it because it starts with '-'
-        // and strict parsers treat unquoted tokens differently than curl/libcurl.
         body.Headers.TryAddWithoutValidation(
             "Content-Type",
             $"multipart/form-data; boundary=\"{boundary}\"");

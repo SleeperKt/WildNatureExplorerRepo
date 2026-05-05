@@ -1,8 +1,6 @@
 namespace WildNatureExplorer.Application.DTOs.AI
 {
-    /// <summary>
-    /// Unified response DTO for all AI service endpoints to ensure consistent response structure
-    /// </summary>
+    /// <summary>Standard payload shape for AI session endpoints.</summary>
     public class AiSessionResponseDto
     {
         /// <summary>
@@ -15,9 +13,7 @@ namespace WildNatureExplorer.Application.DTOs.AI
         /// </summary>
         public AnimalInfoDto? Animal { get; set; }
 
-        /// <summary>
-        /// AI response text (for chat/question responses)
-        /// </summary>
+        /// <summary>Assistant reply text when applicable.</summary>
         public string? Answer { get; set; }
 
         /// <summary>
