@@ -5,8 +5,7 @@ WORKDIR /src
 COPY ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj ./WildNatureExplorer.API/
 COPY ./code/WildNatureExplorer.Application/WildNatureExplorer.Application.csproj ./WildNatureExplorer.Application/
 COPY ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj ./WildNatureExplorer.Infrastructure/
-COPY ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj ./WildNatureExplorer.Tests/
-COPY ./code/WildNatureExplorer.Domain/WildNatureExplorer.Domain.csproj WildNatureExplorer.Domain/
+COPY ./code/WildNatureExplorer.Domain/WildNatureExplorer.Domain.csproj ./WildNatureExplorer.Domain/
 
 RUN dotnet restore ./WildNatureExplorer.API/WildNatureExplorer.API.csproj
 
@@ -25,10 +24,9 @@ COPY --from=build /app/publish .
 
 RUN adduser -D appuser \
     && mkdir -p /home/appuser/.aspnet/DataProtection-Keys \
+    && chown -R appuser:appuser /app \
     && chown -R appuser:appuser /home/appuser/.aspnet/DataProtection-Keys
 USER appuser
-
-RUN chown -R appuser:appuser /home/appuser/.aspnet/DataProtection-Keys
 
 ENV ASPNETCORE_URLS=http://+:5000
 EXPOSE 5000

@@ -9,6 +9,8 @@ namespace WildNatureExplorer.Infrastructure.Migrations
     ///   * CHECK constraints on Rating, Role, lat/lng, AiSessions life-cycle, Users timestamps.
     ///   * UNIQUE constraint on AiFeedbacks.SessionId (one feedback per session).
     ///   * Reference-data seed for Sizes / Colors / Habitats / Countries (idempotent).
+    ///     Ensures CreatedAt/UpdatedAt exist on those tables before INSERT — EF applies this
+    ///     migration before AddIndexesAndAuditTrailFixed due to Migration id string ordering.
     ///   * DBMS roles: app_read, app_write, wne_admin with least-privilege grants.
     /// All statements are written to be idempotent so the migration is safe to re-run
     /// against an already-bootstrapped database.
@@ -97,6 +99,46 @@ namespace WildNatureExplorer.Infrastructure.Migrations
 
                 CREATE UNIQUE INDEX IF NOT EXISTS ""IX_AiFeedbacks_SessionId""
                     ON ""AiFeedbacks"" (""SessionId"");
+            ");
+
+            // ----------------------------------------------------------------
+            // 2b. Audit columns on reference tables used by seed below.
+            //     EF orders migration IDs lexicographically; this migration's id
+            //     (20260428180000_...) runs *before* AddIndexesAndAuditTrailFixed
+            //     (20260428_Add...) unless we duplicate these guards here.
+            // ----------------------------------------------------------------
+            migrationBuilder.Sql(@"
+                DO $$ BEGIN
+                    ALTER TABLE ""Sizes"" ADD COLUMN ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+                DO $$ BEGIN
+                    ALTER TABLE ""Sizes"" ADD COLUMN ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+                DO $$ BEGIN
+                    ALTER TABLE ""Colors"" ADD COLUMN ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+                DO $$ BEGIN
+                    ALTER TABLE ""Colors"" ADD COLUMN ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+                DO $$ BEGIN
+                    ALTER TABLE ""Habitats"" ADD COLUMN ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+                DO $$ BEGIN
+                    ALTER TABLE ""Habitats"" ADD COLUMN ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+                DO $$ BEGIN
+                    ALTER TABLE ""Countries"" ADD COLUMN ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                EXCEPTION WHEN duplicate_column THEN NULL; END $$;
+
+                DO $$ BEGIN
+                    ALTER TABLE ""Countries"" ADD COLUMN ""UpdatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;
+                EXCEPTION WHEN duplicate_column THEN NULL; END $$;
             ");
 
             // ----------------------------------------------------------------

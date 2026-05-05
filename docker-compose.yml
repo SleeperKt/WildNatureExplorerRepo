@@ -5,6 +5,7 @@ services:
     # geo features (radius search, simulate_path_with_dangers).
     image: postgis/postgis:15-3.4
     container_name: wild-nature-explorer-db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -26,6 +27,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     container_name: wild-nature-explorer-api
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
@@ -58,6 +60,7 @@ services:
       args:
         WNE_API_PUBLIC_BASE_URL: ""
     container_name: wild-nature-explorer-web
+    restart: unless-stopped
     depends_on:
       - api
     ports:
@@ -66,6 +69,12 @@ services:
       - ./docker/nginx-frontend.compose.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - wne-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   db-data-dev:
