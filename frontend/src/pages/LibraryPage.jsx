@@ -1,27 +1,38 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import { deleteSighting, getMyLibrary, getNearbySightings } from "../api/library";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Circle,
+  useMap,
+} from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import {
+  deleteSighting,
+  getMyLibrary,
+  getNearbySightings,
+} from '../api/library';
 
 // Reuse the GeoPage marker style so the Library map looks identical to /geo.
 const createAnimalMarker = (name, category) => {
   const colors = {
-    dangerous: { bg: "#ef4444", border: "#dc2626" },
-    rare: { bg: "#8b5cf6", border: "#7c3aed" },
-    common: { bg: "#22c55e", border: "#16a34a" },
+    dangerous: { bg: '#ef4444', border: '#dc2626' },
+    rare: { bg: '#8b5cf6', border: '#7c3aed' },
+    common: { bg: '#22c55e', border: '#16a34a' },
     // Free-form / not-in-catalogue entries: amber so they match the "?"
     // badge on the cards and don't masquerade as a known category.
-    unknown: { bg: "#f59e0b", border: "#d97706" },
+    unknown: { bg: '#f59e0b', border: '#d97706' },
   };
   const color = colors[category] || colors.common;
-  const displayName = name.length > 12 ? name.substring(0, 10) + "..." : name;
+  const displayName = name.length > 12 ? name.substring(0, 10) + '...' : name;
 
   return L.divIcon({
-    className: "animal-marker-container",
+    className: 'animal-marker-container',
     html: `
       <div class="animal-marker ${category}">
         <div class="animal-marker-circle" style="background: ${color.bg}; border-color: ${color.border}">
@@ -39,7 +50,7 @@ const createAnimalMarker = (name, category) => {
 };
 
 const userLocationIcon = L.divIcon({
-  className: "user-location-marker",
+  className: 'user-location-marker',
   html: `<div class="user-marker-dot"></div><div class="user-marker-pulse"></div>`,
   iconSize: [24, 24],
   iconAnchor: [12, 12],
@@ -50,7 +61,9 @@ function MapAutoFit({ markers, center, fallbackZoom = 4 }) {
 
   useEffect(() => {
     if (markers && markers.length > 0) {
-      const bounds = L.latLngBounds(markers.map((m) => [m.latitude, m.longitude]));
+      const bounds = L.latLngBounds(
+        markers.map((m) => [m.latitude, m.longitude])
+      );
       if (center) bounds.extend(center);
       map.fitBounds(bounds, { padding: [60, 60], maxZoom: 12 });
     } else if (center) {
@@ -68,25 +81,25 @@ function MapAutoFit({ markers, center, fallbackZoom = 4 }) {
 // to "Common" — otherwise saving e.g. "Lion" would silently mislabel a
 // dangerous animal as harmless.
 const categoryOf = (s) => {
-  if (!s.speciesId) return "unknown";
-  if (s.isDangerous) return "dangerous";
-  if (s.isRare) return "rare";
-  return "common";
+  if (!s.speciesId) return 'unknown';
+  if (s.isDangerous) return 'dangerous';
+  if (s.isRare) return 'rare';
+  return 'common';
 };
 const categoryLabel = (s) => {
-  if (!s.speciesId) return "Custom";
-  if (s.isDangerous) return "Dangerous";
-  if (s.isRare) return "Rare";
-  return "Common";
+  if (!s.speciesId) return 'Custom';
+  if (s.isDangerous) return 'Dangerous';
+  if (s.isRare) return 'Rare';
+  return 'Common';
 };
 
 function formatDate(iso) {
-  if (!iso) return "—";
+  if (!iso) return '—';
   try {
     return new Date(iso).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   } catch {
     return iso;
@@ -104,12 +117,12 @@ function FlipCard({ sighting, onDelete }) {
 
   return (
     <div
-      className={`lib-card ${flipped ? "flipped" : ""}`}
+      className={`lib-card ${flipped ? 'flipped' : ''}`}
       onClick={() => setFlipped((v) => !v)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
+        if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           setFlipped((v) => !v);
         }
@@ -127,7 +140,12 @@ function FlipCard({ sighting, onDelete }) {
             />
           ) : (
             <div className="lib-card-placeholder">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                 <circle cx="8.5" cy="8.5" r="1.5" />
                 <polyline points="21 15 16 10 5 21" />
@@ -145,7 +163,9 @@ function FlipCard({ sighting, onDelete }) {
             </span>
           )}
           <div className="lib-card-front-overlay">
-            <span className={`lib-card-badge cat-${cat}`}>{categoryLabel(sighting)}</span>
+            <span className={`lib-card-badge cat-${cat}`}>
+              {categoryLabel(sighting)}
+            </span>
             <h3>{sighting.commonName}</h3>
             <p className="lib-card-scientific">{sighting.scientificName}</p>
           </div>
@@ -177,14 +197,23 @@ function FlipCard({ sighting, onDelete }) {
             aria-label="Flip card back"
             title="Flip back"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
 
           <div className="lib-card-back-scroll">
             <div className="lib-card-back-header">
-              <span className={`lib-card-badge cat-${cat}`}>{categoryLabel(sighting)}</span>
+              <span className={`lib-card-badge cat-${cat}`}>
+                {categoryLabel(sighting)}
+              </span>
               <h3>{sighting.commonName}</h3>
               <p className="lib-card-scientific">{sighting.scientificName}</p>
             </div>
@@ -197,10 +226,11 @@ function FlipCard({ sighting, onDelete }) {
               <div>
                 <dt>Location</dt>
                 <dd>
-                  {sighting.latitude.toFixed(4)}, {sighting.longitude.toFixed(4)}
+                  {sighting.latitude.toFixed(4)},{' '}
+                  {sighting.longitude.toFixed(4)}
                 </dd>
               </div>
-              {typeof sighting.distanceKm === "number" && (
+              {typeof sighting.distanceKm === 'number' && (
                 <div>
                   <dt>Distance</dt>
                   <dd>{sighting.distanceKm.toFixed(2)} km</dd>
@@ -221,7 +251,12 @@ function FlipCard({ sighting, onDelete }) {
                 onDelete(sighting);
               }}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6" />
                 <path d="M10 11v6M14 11v6" />
@@ -238,26 +273,26 @@ function FlipCard({ sighting, onDelete }) {
 
 export default function LibraryPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState("collection"); // 'collection' | 'map'
+  const [tab, setTab] = useState('collection'); // 'collection' | 'map'
   const [sightings, setSightings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   // Map mode: 'all' shows every saved sighting; 'radius' filters by km from
   // the user's current location (calls fn_user_nearby_sightings on the server).
-  const [mapMode, setMapMode] = useState("all");
+  const [mapMode, setMapMode] = useState('all');
   const [userLocation, setUserLocation] = useState(null);
-  const [radiusInput, setRadiusInput] = useState("25");
+  const [radiusInput, setRadiusInput] = useState('25');
   const [radiusKm, setRadiusKm] = useState(25);
   const [nearby, setNearby] = useState(null);
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const radiusDebounceRef = useRef(null);
 
-  const isAuthed = useMemo(() => Boolean(localStorage.getItem("token")), []);
+  const isAuthed = useMemo(() => Boolean(localStorage.getItem('token')), []);
 
   useEffect(() => {
     if (!isAuthed) {
-      navigate("/login");
+      navigate('/login');
       return;
     }
     let cancelled = false;
@@ -268,7 +303,10 @@ export default function LibraryPage() {
         if (!cancelled) setSightings(data);
       } catch (err) {
         if (!cancelled)
-          setError("Failed to load your library: " + (err.response?.data?.message || err.message));
+          setError(
+            'Failed to load your library: ' +
+              (err.response?.data?.message || err.message)
+          );
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -282,7 +320,11 @@ export default function LibraryPage() {
   useEffect(() => {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) =>
+        setUserLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        }),
       () => {},
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -291,7 +333,7 @@ export default function LibraryPage() {
   // Debounced effect — only fires in "radius" mode and calls
   // fn_user_nearby_sightings server-side.
   useEffect(() => {
-    if (mapMode !== "radius") {
+    if (mapMode !== 'radius') {
       setNearby(null);
       return;
     }
@@ -302,16 +344,23 @@ export default function LibraryPage() {
         return;
       }
       if (!userLocation) {
-        setError("Allow location access to use the radius filter.");
+        setError('Allow location access to use the radius filter.');
         return;
       }
       try {
         setNearbyLoading(true);
-        setError("");
-        const data = await getNearbySightings(userLocation.lat, userLocation.lng, radiusKm);
+        setError('');
+        const data = await getNearbySightings(
+          userLocation.lat,
+          userLocation.lng,
+          radiusKm
+        );
         setNearby(data);
       } catch (err) {
-        setError("Radius search failed: " + (err.response?.data?.message || err.message));
+        setError(
+          'Radius search failed: ' +
+            (err.response?.data?.message || err.message)
+        );
       } finally {
         setNearbyLoading(false);
       }
@@ -324,29 +373,34 @@ export default function LibraryPage() {
     try {
       await deleteSighting(sighting.id);
       setSightings((prev) => prev.filter((s) => s.id !== sighting.id));
-      setNearby((prev) => (prev ? prev.filter((s) => s.id !== sighting.id) : prev));
+      setNearby((prev) =>
+        prev ? prev.filter((s) => s.id !== sighting.id) : prev
+      );
     } catch (err) {
-      alert("Delete failed: " + (err.response?.data?.message || err.message));
+      alert('Delete failed: ' + (err.response?.data?.message || err.message));
     }
   };
 
   const requestLocation = () => {
     if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser.");
+      setError('Geolocation is not supported by your browser.');
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setError("");
+        setUserLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        setError('');
       },
-      (err) => setError("Could not access location: " + err.message),
+      (err) => setError('Could not access location: ' + err.message),
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
-  const visibleOnMap = mapMode === "radius" ? (nearby ?? []) : sightings;
-  const radiusActive = mapMode === "radius" && radiusKm > 0 && !!userLocation;
+  const visibleOnMap = mapMode === 'radius' ? (nearby ?? []) : sightings;
+  const radiusActive = mapMode === 'radius' && radiusKm > 0 && !!userLocation;
 
   return (
     <div className="lib-page">
@@ -358,17 +412,22 @@ export default function LibraryPage() {
             <span className="section-badge">Your Collection</span>
             <h2 className="section-title">My Wildlife Library</h2>
             <p className="section-subtitle">
-              Animals you've encountered, all in one place. Tap a card to see the details, or
-              switch to the map to see where they were.
+              Animals you've encountered, all in one place. Tap a card to see
+              the details, or switch to the map to see where they were.
             </p>
           </div>
 
           <div className="lib-tabs">
             <button
-              className={`lib-tab ${tab === "collection" ? "active" : ""}`}
-              onClick={() => setTab("collection")}
+              className={`lib-tab ${tab === 'collection' ? 'active' : ''}`}
+              onClick={() => setTab('collection')}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <rect x="3" y="3" width="7" height="7" />
                 <rect x="14" y="3" width="7" height="7" />
                 <rect x="14" y="14" width="7" height="7" />
@@ -378,10 +437,15 @@ export default function LibraryPage() {
               <span className="lib-tab-count">{sightings.length}</span>
             </button>
             <button
-              className={`lib-tab ${tab === "map" ? "active" : ""}`}
-              onClick={() => setTab("map")}
+              className={`lib-tab ${tab === 'map' ? 'active' : ''}`}
+              onClick={() => setTab('map')}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
@@ -393,11 +457,11 @@ export default function LibraryPage() {
         {error && (
           <div className="lib-error">
             <span>{error}</span>
-            <button onClick={() => setError("")}>×</button>
+            <button onClick={() => setError('')}>×</button>
           </div>
         )}
 
-        {tab === "collection" && (
+        {tab === 'collection' && (
           <section className="lib-collection">
             {loading ? (
               <div className="lib-empty">
@@ -409,10 +473,13 @@ export default function LibraryPage() {
                 <div className="lib-empty-icon">🦁</div>
                 <h3>No animals saved yet</h3>
                 <p>
-                  Head over to the AI Assistant, recognise an animal, then tap{" "}
+                  Head over to the AI Assistant, recognise an animal, then tap{' '}
                   <strong>Save to Library</strong> to start your collection.
                 </p>
-                <button className="btn btn-primary" onClick={() => navigate("/ai")}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => navigate('/ai')}
+                >
                   Go to AI Assistant
                 </button>
               </div>
@@ -426,28 +493,38 @@ export default function LibraryPage() {
           </section>
         )}
 
-        {tab === "map" && (
+        {tab === 'map' && (
           <section className="lib-map-section">
             <div className="lib-radius-bar">
               <div className="lib-mode-toggle" role="tablist">
                 <button
                   role="tab"
-                  aria-selected={mapMode === "all"}
-                  className={`lib-mode-btn ${mapMode === "all" ? "active" : ""}`}
-                  onClick={() => setMapMode("all")}
+                  aria-selected={mapMode === 'all'}
+                  className={`lib-mode-btn ${mapMode === 'all' ? 'active' : ''}`}
+                  onClick={() => setMapMode('all')}
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <circle cx="12" cy="12" r="10" />
                   </svg>
                   All my sightings
                 </button>
                 <button
                   role="tab"
-                  aria-selected={mapMode === "radius"}
-                  className={`lib-mode-btn ${mapMode === "radius" ? "active" : ""}`}
-                  onClick={() => setMapMode("radius")}
+                  aria-selected={mapMode === 'radius'}
+                  className={`lib-mode-btn ${mapMode === 'radius' ? 'active' : ''}`}
+                  onClick={() => setMapMode('radius')}
                 >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <circle cx="12" cy="12" r="3" />
                     <circle cx="12" cy="12" r="9" strokeDasharray="3 3" />
                   </svg>
@@ -455,7 +532,7 @@ export default function LibraryPage() {
                 </button>
               </div>
 
-              {mapMode === "radius" && (
+              {mapMode === 'radius' && (
                 <div className="lib-radius-field">
                   <div className="lib-radius-input">
                     <input
@@ -469,7 +546,9 @@ export default function LibraryPage() {
                         const raw = e.target.value;
                         setRadiusInput(raw);
                         const n = parseFloat(raw);
-                        setRadiusKm(Number.isFinite(n) && n > 0 ? Math.min(n, 1000) : 0);
+                        setRadiusKm(
+                          Number.isFinite(n) && n > 0 ? Math.min(n, 1000) : 0
+                        );
                       }}
                     />
                     <span className="lib-radius-unit">km of me</span>
@@ -481,21 +560,27 @@ export default function LibraryPage() {
               )}
 
               <div className="lib-radius-status">
-                {mapMode === "radius" && !userLocation && (
+                {mapMode === 'radius' && !userLocation && (
                   <button className="btn btn-outline" onClick={requestLocation}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      style={{ width: 16, height: 16 }}
+                    >
                       <circle cx="12" cy="12" r="10" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
                     Enable my location
                   </button>
                 )}
-                {mapMode === "all" && (
+                {mapMode === 'all' && (
                   <div className="lib-radius-pill">
                     Showing all {sightings.length} sightings
                   </div>
                 )}
-                {mapMode === "radius" && userLocation && radiusActive && (
+                {mapMode === 'radius' && userLocation && radiusActive && (
                   <div className="lib-radius-pill active">
                     {visibleOnMap.length} within {radiusKm} km
                   </div>
@@ -508,7 +593,7 @@ export default function LibraryPage() {
               <MapContainer
                 center={[20, 0]}
                 zoom={2}
-                style={{ height: "100%", width: "100%" }}
+                style={{ height: '100%', width: '100%' }}
               >
                 <TileLayer
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -517,11 +602,16 @@ export default function LibraryPage() {
 
                 <MapAutoFit
                   markers={visibleOnMap}
-                  center={userLocation ? [userLocation.lat, userLocation.lng] : null}
+                  center={
+                    userLocation ? [userLocation.lat, userLocation.lng] : null
+                  }
                 />
 
                 {userLocation && (
-                  <Marker position={[userLocation.lat, userLocation.lng]} icon={userLocationIcon}>
+                  <Marker
+                    position={[userLocation.lat, userLocation.lng]}
+                    icon={userLocationIcon}
+                  >
                     <Popup>You are here</Popup>
                   </Marker>
                 )}
@@ -531,11 +621,11 @@ export default function LibraryPage() {
                     center={[userLocation.lat, userLocation.lng]}
                     radius={radiusKm * 1000}
                     pathOptions={{
-                      color: "#16a34a",
-                      fillColor: "#16a34a",
+                      color: '#16a34a',
+                      fillColor: '#16a34a',
                       fillOpacity: 0.08,
                       weight: 2,
-                      dashArray: "6, 6",
+                      dashArray: '6, 6',
                     }}
                   />
                 )}
@@ -548,16 +638,25 @@ export default function LibraryPage() {
                   >
                     <Popup className="geo-marker-popup">
                       <div className="geo-popup-content">
-                        <span className={`geo-popup-category category-${categoryOf(s)}`}>
+                        <span
+                          className={`geo-popup-category category-${categoryOf(s)}`}
+                        >
                           {categoryLabel(s)}
                         </span>
                         <h4>{s.commonName}</h4>
-                        <p style={{ fontStyle: "italic", margin: 0, fontSize: 12 }}>
+                        <p
+                          style={{
+                            fontStyle: 'italic',
+                            margin: 0,
+                            fontSize: 12,
+                          }}
+                        >
                           {s.scientificName}
                         </p>
-                        <p style={{ margin: "6px 0 0", fontSize: 12 }}>
+                        <p style={{ margin: '6px 0 0', fontSize: 12 }}>
                           Sighted {formatDate(s.sightedAt)}
-                          {typeof s.distanceKm === "number" && ` · ${s.distanceKm.toFixed(1)} km away`}
+                          {typeof s.distanceKm === 'number' &&
+                            ` · ${s.distanceKm.toFixed(1)} km away`}
                         </p>
                       </div>
                     </Popup>

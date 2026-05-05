@@ -5,26 +5,27 @@
 
 const VALIDATION_RULES = {
   email: {
-    required: "Email is required.",
-    format: "Email format is invalid. Use format: name@gmail.com",
-    maxLength: "Email cannot exceed 32 characters.",
+    required: 'Email is required.',
+    format: 'Email format is invalid. Use format: name@gmail.com',
+    maxLength: 'Email cannot exceed 32 characters.',
   },
   password: {
-    required: "Password is required.",
-    minLength: "Password must be at least 8 characters.",
-    maxLength: "Password cannot exceed 20 characters.",
-    uppercase: "Password must contain at least one uppercase letter.",
-    lowercase: "Password must contain at least one lowercase letter.",
-    digits: "Password must contain at least 2 digits.",
-    special: "Password must contain at least one special character (! ? @ # $).",
+    required: 'Password is required.',
+    minLength: 'Password must be at least 8 characters.',
+    maxLength: 'Password cannot exceed 20 characters.',
+    uppercase: 'Password must contain at least one uppercase letter.',
+    lowercase: 'Password must contain at least one lowercase letter.',
+    digits: 'Password must contain at least 2 digits.',
+    special:
+      'Password must contain at least one special character (! ? @ # $).',
   },
   firstName: {
-    required: "FirstName is required.",
-    maxLength: "FirstName cannot exceed 16 characters.",
+    required: 'FirstName is required.',
+    maxLength: 'FirstName cannot exceed 16 characters.',
   },
   lastName: {
-    required: "LastName is required.",
-    maxLength: "LastName cannot exceed 16 characters.",
+    required: 'LastName is required.',
+    maxLength: 'LastName cannot exceed 16 characters.',
   },
 };
 
@@ -32,7 +33,7 @@ const VALIDATION_RULES = {
  * Validate email
  */
 export const validateEmail = (email) => {
-  if (!email || email.trim() === "") {
+  if (!email || email.trim() === '') {
     return VALIDATION_RULES.email.required;
   }
   if (!isValidEmailFormat(email)) {
@@ -48,7 +49,7 @@ export const validateEmail = (email) => {
  * Validate password
  */
 export const validatePassword = (password) => {
-  if (!password || password.trim() === "") {
+  if (!password || password.trim() === '') {
     return VALIDATION_RULES.password.required;
   }
   if (password.length < 8) {
@@ -76,7 +77,7 @@ export const validatePassword = (password) => {
  * Validate first name
  */
 export const validateFirstName = (firstName) => {
-  if (!firstName || firstName.trim() === "") {
+  if (!firstName || firstName.trim() === '') {
     return VALIDATION_RULES.firstName.required;
   }
   if (firstName.length > 16) {
@@ -89,7 +90,7 @@ export const validateFirstName = (firstName) => {
  * Validate last name
  */
 export const validateLastName = (lastName) => {
-  if (!lastName || lastName.trim() === "") {
+  if (!lastName || lastName.trim() === '') {
     return VALIDATION_RULES.lastName.required;
   }
   if (lastName.length > 16) {

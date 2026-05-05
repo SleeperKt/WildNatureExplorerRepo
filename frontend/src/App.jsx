@@ -1,24 +1,24 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import { ErrorProvider } from "./context/ErrorContext";
-import GlobalErrorModal from "./components/GlobalErrorModal";
-import LoginPage from "./pages/LoginPage";
-import MainPage from "./pages/MainPage";
-import SearchPage from "./pages/SearchPage";
-import GeoPage from "./pages/GeoPage";
-import AiPage from "./pages/AiPage";
-import LibraryPage from "./pages/LibraryPage";
-import ResultsPage from "./pages/ResultsPage";
-import { setGlobalErrorHandler } from "./api/client";
-import { useGlobalError } from "./context/ErrorContext";
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { ErrorProvider } from './context/ErrorContext';
+import GlobalErrorModal from './components/GlobalErrorModal';
+import LoginPage from './pages/LoginPage';
+import MainPage from './pages/MainPage';
+import SearchPage from './pages/SearchPage';
+import GeoPage from './pages/GeoPage';
+import AiPage from './pages/AiPage';
+import LibraryPage from './pages/LibraryPage';
+import ResultsPage from './pages/ResultsPage';
+import { setGlobalErrorHandler } from './api/client';
+import { useGlobalError } from './context/ErrorContext';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-  
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
-  
+
   return null;
 }
 

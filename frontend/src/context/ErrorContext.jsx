@@ -1,9 +1,9 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState } from 'react';
 
 const ErrorContext = createContext();
 
 export const ErrorProvider = ({ children }) => {
-  const [backendError, setBackendError] = useState("");
+  const [backendError, setBackendError] = useState('');
   const [showBackendErrorModal, setShowBackendErrorModal] = useState(false);
 
   const showError = (message) => {
@@ -13,11 +13,13 @@ export const ErrorProvider = ({ children }) => {
 
   const hideError = () => {
     setShowBackendErrorModal(false);
-    setBackendError("");
+    setBackendError('');
   };
 
   return (
-    <ErrorContext.Provider value={{ backendError, showBackendErrorModal, showError, hideError }}>
+    <ErrorContext.Provider
+      value={{ backendError, showBackendErrorModal, showError, hideError }}
+    >
       {children}
     </ErrorContext.Provider>
   );
@@ -28,7 +30,7 @@ export const ErrorProvider = ({ children }) => {
 export const useGlobalError = () => {
   const context = useContext(ErrorContext);
   if (!context) {
-    throw new Error("useGlobalError must be used within ErrorProvider");
+    throw new Error('useGlobalError must be used within ErrorProvider');
   }
   return context;
 };

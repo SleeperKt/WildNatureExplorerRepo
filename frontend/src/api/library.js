@@ -1,14 +1,14 @@
-import { api } from "./client";
+import { api } from './client';
 
 // Save a recognized animal to the current user's library.
 export async function createSighting(payload) {
-  const res = await api.post("/api/library/sightings", payload);
+  const res = await api.post('/api/library/sightings', payload);
   return res.data;
 }
 
 // Fetch every sighting belonging to the authenticated user.
 export async function getMyLibrary() {
-  const res = await api.get("/api/library/sightings");
+  const res = await api.get('/api/library/sightings');
   return res.data;
 }
 
@@ -20,7 +20,7 @@ export async function deleteSighting(id) {
 // Calls fn_user_nearby_sightings server-side and returns sightings within
 // `radiusKm` of (lat, lng), sorted by distance.
 export async function getNearbySightings(lat, lng, radiusKm) {
-  const res = await api.get("/api/library/nearby", {
+  const res = await api.get('/api/library/nearby', {
     params: { lat, lng, radiusKm },
   });
   return res.data;
@@ -31,7 +31,7 @@ export async function getNearbySightings(lat, lng, radiusKm) {
 // to show a friendly "we couldn't match this species" hint.
 export async function getSpeciesByName(name) {
   try {
-    const res = await api.get("/api/species/by-name", {
+    const res = await api.get('/api/species/by-name', {
       params: { name },
     });
     return res.data;

@@ -1,31 +1,47 @@
-import { useState, useEffect, useCallback } from "react";
-import { api } from "../api/client";
-import { useLocation, useNavigate } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import AnimatedTree from "../components/AnimatedTree";
-import dangerousIcon from "../images/dangerous.svg";
-import rareIcon from "../images/rare.svg";
+import { useState, useEffect, useCallback } from 'react';
+import { api } from '../api/client';
+import { useLocation, useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import AnimatedTree from '../components/AnimatedTree';
+import dangerousIcon from '../images/dangerous.svg';
+import rareIcon from '../images/rare.svg';
 
 // Forest images
-import treeBackA from "../images/Nature/forest/tree-backA.svg";
-import treeBackB from "../images/Nature/forest/tree-BackB.svg";
-import treeBackC from "../images/Nature/forest/tree-BackC.svg";
-import pineForest from "../images/Nature/forest/Pine-forest-back-removebg-preview.png";
-import leafA from "../images/Nature/Leaf-A.svg";
-import leafB from "../images/Nature/Leaf-B.svg";
-import leafC from "../images/Nature/Leaf-C.svg";
+import treeBackA from '../images/Nature/forest/tree-backA.svg';
+import treeBackB from '../images/Nature/forest/tree-BackB.svg';
+import treeBackC from '../images/Nature/forest/tree-BackC.svg';
+import pineForest from '../images/Nature/forest/Pine-forest-back-removebg-preview.png';
+import leafA from '../images/Nature/Leaf-A.svg';
+import leafB from '../images/Nature/Leaf-B.svg';
+import leafC from '../images/Nature/Leaf-C.svg';
 
 // SVG Icons
 const SearchResultIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon-lg">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="icon-lg"
+  >
     <circle cx="11" cy="11" r="8" />
     <path d="m21 21-4.35-4.35" />
   </svg>
 );
 
 const LizardIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon-xl">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="icon-xl"
+  >
     <path d="M13 4v1a3 3 0 0 0 3 3h1" />
     <path d="M18 8h-1a3 3 0 0 1-3-3V4" />
     <path d="M16 21h-4a2 2 0 0 1-2-2v-4a3 3 0 0 1 3-3h7" />
@@ -35,18 +51,23 @@ const LizardIcon = () => (
   </svg>
 );
 
-const AnimalIcon = ({ isDangerous, isRare }) => (
+const AnimalIcon = ({ isDangerous, isRare }) =>
   isDangerous ? (
     <img src={dangerousIcon} alt="Dangerous" className="species-icon" />
   ) : isRare ? (
     <img src={rareIcon} alt="Rare" className="species-icon" />
   ) : (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="species-icon">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      className="species-icon"
+    >
       <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
       <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
     </svg>
-  )
-);
+  );
 
 // Dangerous icon (beast jaws)
 const JawsIcon = () => (
@@ -59,14 +80,30 @@ const BinocularsIcon = () => (
 );
 
 const LeafIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="badge-icon">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="badge-icon"
+  >
     <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
     <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
   </svg>
 );
 
 const RulerIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="info-icon">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="info-icon"
+  >
     <path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z" />
     <path d="m14.5 12.5 2-2" />
     <path d="m11.5 9.5 2-2" />
@@ -76,7 +113,15 @@ const RulerIcon = () => (
 );
 
 const PaletteIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="info-icon">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="info-icon"
+  >
     <circle cx="13.5" cy="6.5" r="0.5" fill="currentColor" />
     <circle cx="17.5" cy="10.5" r="0.5" fill="currentColor" />
     <circle cx="8.5" cy="7.5" r="0.5" fill="currentColor" />
@@ -86,13 +131,29 @@ const PaletteIcon = () => (
 );
 
 const MountainIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="info-icon">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="info-icon"
+  >
     <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
   </svg>
 );
 
 const GlobeIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="info-icon">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className="info-icon"
+  >
     <circle cx="12" cy="12" r="10" />
     <line x1="2" y1="12" x2="22" y2="12" />
     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
@@ -134,12 +195,15 @@ export default function ResultsPage() {
       rotationSpeed: 0.8 + Math.random() * 1.2,
     };
 
-    setLeaves(prev => [...prev, newLeaf]);
+    setLeaves((prev) => [...prev, newLeaf]);
 
     // Remove after animation
-    setTimeout(() => {
-      setLeaves(prev => prev.filter(l => l.id !== id));
-    }, fallDuration * 1000 + 500);
+    setTimeout(
+      () => {
+        setLeaves((prev) => prev.filter((l) => l.id !== id));
+      },
+      fallDuration * 1000 + 500
+    );
   }, [leafImages]);
 
   // Wind effect - triggers leaves and tree sway
@@ -182,14 +246,24 @@ export default function ResultsPage() {
       const res = await api.get(`/api/species/${id}`);
       setSelected(res.data);
     } catch (err) {
-      alert("Failed to load details: " + (err.response?.data?.message || err.message));
+      alert(
+        'Failed to load details: ' +
+          (err.response?.data?.message || err.message)
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   const CloseIcon = (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
@@ -218,7 +292,7 @@ export default function ResultsPage() {
 
         {/* Falling leaves */}
         <div className="leaves-layer">
-          {leaves.map(leaf => (
+          {leaves.map((leaf) => (
             <div
               key={leaf.id}
               className="falling-leaf"
@@ -263,7 +337,10 @@ export default function ResultsPage() {
               </div>
               <h3>No Species Found</h3>
               <p>Try adjusting your search filters to find more wildlife</p>
-              <button className="results-btn-search" onClick={() => navigate("/search")}>
+              <button
+                className="results-btn-search"
+                onClick={() => navigate('/search')}
+              >
                 Modify Search
               </button>
             </div>
@@ -275,8 +352,13 @@ export default function ResultsPage() {
                   className="results-species-card"
                   onClick={() => openDetails(item.id)}
                 >
-                  <div className={`results-card-image ${item.isDangerous ? 'danger' : item.isRare ? 'rare' : 'common'}`}>
-                    <AnimalIcon isDangerous={item.isDangerous} isRare={item.isRare} />
+                  <div
+                    className={`results-card-image ${item.isDangerous ? 'danger' : item.isRare ? 'rare' : 'common'}`}
+                  >
+                    <AnimalIcon
+                      isDangerous={item.isDangerous}
+                      isRare={item.isRare}
+                    />
                   </div>
                   <div className="results-card-content">
                     <h3 className="results-card-name">{item.commonName}</h3>
@@ -299,7 +381,12 @@ export default function ResultsPage() {
                     </div>
                   </div>
                   <div className="results-card-arrow">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
                   </div>
@@ -310,10 +397,13 @@ export default function ResultsPage() {
 
           {/* Back Button */}
           <div className="results-actions">
-            <button className="results-back-link" onClick={() => navigate("/search")}>
+            <button
+              className="results-back-link"
+              onClick={() => navigate('/search')}
+            >
               ← Back to Search
             </button>
-            <button className="results-home-link" onClick={() => navigate("/")}>
+            <button className="results-home-link" onClick={() => navigate('/')}>
               Home
             </button>
           </div>
@@ -324,26 +414,51 @@ export default function ResultsPage() {
 
       {/* Species Detail Modal */}
       {selected && (
-        <div className="results-modal-overlay" onClick={() => setSelected(null)}>
+        <div
+          className="results-modal-overlay"
+          onClick={() => setSelected(null)}
+        >
           <div className="results-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="results-modal-close" onClick={() => setSelected(null)}>
+            <button
+              className="results-modal-close"
+              onClick={() => setSelected(null)}
+            >
               {CloseIcon}
             </button>
 
             <div className="results-modal-header">
-              <div className={`results-modal-icon ${selected.isDangerous ? 'danger' : selected.isRare ? 'rare' : 'common'}`}>
-                <AnimalIcon isDangerous={selected.isDangerous} isRare={selected.isRare} />
+              <div
+                className={`results-modal-icon ${selected.isDangerous ? 'danger' : selected.isRare ? 'rare' : 'common'}`}
+              >
+                <AnimalIcon
+                  isDangerous={selected.isDangerous}
+                  isRare={selected.isRare}
+                />
               </div>
               <div className="results-modal-titles">
                 <h2>{selected.commonName}</h2>
-                <p className="results-modal-scientific">{selected.scientificName}</p>
+                <p className="results-modal-scientific">
+                  {selected.scientificName}
+                </p>
               </div>
             </div>
 
             <div className="results-modal-badges">
-              {selected.isRare && <span className="results-badge rare"><BinocularsIcon /> Rare</span>}
-              {selected.isDangerous && <span className="results-badge danger"><JawsIcon /> Dangerous</span>}
-              {!selected.isRare && !selected.isDangerous && <span className="results-badge common"><LeafIcon /> Common</span>}
+              {selected.isRare && (
+                <span className="results-badge rare">
+                  <BinocularsIcon /> Rare
+                </span>
+              )}
+              {selected.isDangerous && (
+                <span className="results-badge danger">
+                  <JawsIcon /> Dangerous
+                </span>
+              )}
+              {!selected.isRare && !selected.isDangerous && (
+                <span className="results-badge common">
+                  <LeafIcon /> Common
+                </span>
+              )}
             </div>
 
             <div className="results-modal-body">
@@ -369,7 +484,7 @@ export default function ResultsPage() {
                   </span>
                   <div>
                     <strong>Colors</strong>
-                    <p>{selected.colors?.join(", ") || "N/A"}</p>
+                    <p>{selected.colors?.join(', ') || 'N/A'}</p>
                   </div>
                 </div>
 
@@ -379,7 +494,7 @@ export default function ResultsPage() {
                   </span>
                   <div>
                     <strong>Habitats</strong>
-                    <p>{selected.habitats?.join(", ") || "N/A"}</p>
+                    <p>{selected.habitats?.join(', ') || 'N/A'}</p>
                   </div>
                 </div>
 
@@ -389,7 +504,7 @@ export default function ResultsPage() {
                   </span>
                   <div>
                     <strong>Countries</strong>
-                    <p>{selected.countries?.join(", ") || "N/A"}</p>
+                    <p>{selected.countries?.join(', ') || 'N/A'}</p>
                   </div>
                 </div>
               </div>
