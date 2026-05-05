@@ -121,58 +121,6 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                 EXCEPTION WHEN duplicate_column THEN NULL; END $$;
             ");
 
-            // Reference dimension seed
-            migrationBuilder.Sql(@"
-                -- Sizes
-                INSERT INTO ""Sizes"" (""Id"", ""Name"", ""NormalizedName"", ""CreatedAt"", ""UpdatedAt"") VALUES
-                    ('11111111-0000-0000-0000-000000000001', 'Tiny',   'tiny',   NOW(), NOW()),
-                    ('11111111-0000-0000-0000-000000000002', 'Small',  'small',  NOW(), NOW()),
-                    ('11111111-0000-0000-0000-000000000003', 'Medium', 'medium', NOW(), NOW()),
-                    ('11111111-0000-0000-0000-000000000004', 'Large',  'large',  NOW(), NOW()),
-                    ('11111111-0000-0000-0000-000000000005', 'Huge',   'huge',   NOW(), NOW())
-                ON CONFLICT (""NormalizedName"") DO NOTHING;
-
-                -- Colors
-                INSERT INTO ""Colors"" (""Id"", ""Name"", ""NormalizedName"", ""CreatedAt"", ""UpdatedAt"") VALUES
-                    ('22222222-0000-0000-0000-000000000001', 'Black',  'black',  NOW(), NOW()),
-                    ('22222222-0000-0000-0000-000000000002', 'White',  'white',  NOW(), NOW()),
-                    ('22222222-0000-0000-0000-000000000003', 'Brown',  'brown',  NOW(), NOW()),
-                    ('22222222-0000-0000-0000-000000000004', 'Gray',   'gray',   NOW(), NOW()),
-                    ('22222222-0000-0000-0000-000000000005', 'Golden', 'golden', NOW(), NOW()),
-                    ('22222222-0000-0000-0000-000000000006', 'Orange', 'orange', NOW(), NOW()),
-                    ('22222222-0000-0000-0000-000000000007', 'Yellow', 'yellow', NOW(), NOW()),
-                    ('22222222-0000-0000-0000-000000000008', 'Red',    'red',    NOW(), NOW()),
-                    ('22222222-0000-0000-0000-000000000009', 'Green',  'green',  NOW(), NOW()),
-                    ('22222222-0000-0000-0000-00000000000a', 'Blue',   'blue',   NOW(), NOW())
-                ON CONFLICT (""NormalizedName"") DO NOTHING;
-
-                -- Habitats
-                INSERT INTO ""Habitats"" (""Id"", ""Name"", ""NormalizedName"", ""CreatedAt"", ""UpdatedAt"") VALUES
-                    ('33333333-0000-0000-0000-000000000001', 'Savanna',  'savanna',  NOW(), NOW()),
-                    ('33333333-0000-0000-0000-000000000002', 'Forest',   'forest',   NOW(), NOW()),
-                    ('33333333-0000-0000-0000-000000000003', 'Desert',   'desert',   NOW(), NOW()),
-                    ('33333333-0000-0000-0000-000000000004', 'Mountain', 'mountain', NOW(), NOW()),
-                    ('33333333-0000-0000-0000-000000000005', 'Wetland',  'wetland',  NOW(), NOW()),
-                    ('33333333-0000-0000-0000-000000000006', 'Ocean',    'ocean',    NOW(), NOW()),
-                    ('33333333-0000-0000-0000-000000000007', 'Tundra',   'tundra',   NOW(), NOW()),
-                    ('33333333-0000-0000-0000-000000000008', 'Jungle',   'jungle',   NOW(), NOW())
-                ON CONFLICT (""NormalizedName"") DO NOTHING;
-
-                -- Countries (sample seed; full ISO list can be imported later)
-                INSERT INTO ""Countries"" (""Id"", ""Name"", ""NormalizedName"", ""CreatedAt"", ""UpdatedAt"") VALUES
-                    ('44444444-0000-0000-0000-000000000001', 'Kazakhstan',     'kazakhstan',     NOW(), NOW()),
-                    ('44444444-0000-0000-0000-000000000002', 'United States',  'unitedstates',   NOW(), NOW()),
-                    ('44444444-0000-0000-0000-000000000003', 'Brazil',         'brazil',         NOW(), NOW()),
-                    ('44444444-0000-0000-0000-000000000004', 'Kenya',          'kenya',          NOW(), NOW()),
-                    ('44444444-0000-0000-0000-000000000005', 'India',          'india',          NOW(), NOW()),
-                    ('44444444-0000-0000-0000-000000000006', 'Australia',      'australia',      NOW(), NOW()),
-                    ('44444444-0000-0000-0000-000000000007', 'Canada',         'canada',         NOW(), NOW()),
-                    ('44444444-0000-0000-0000-000000000008', 'South Africa',   'southafrica',    NOW(), NOW()),
-                    ('44444444-0000-0000-0000-000000000009', 'Indonesia',      'indonesia',      NOW(), NOW()),
-                    ('44444444-0000-0000-0000-00000000000a', 'Mexico',         'mexico',         NOW(), NOW())
-                ON CONFLICT (""NormalizedName"") DO NOTHING;
-            ");
-
             // Roles app_read, app_write, wne_admin + grants
             migrationBuilder.Sql(@"
                 DO $$ BEGIN
