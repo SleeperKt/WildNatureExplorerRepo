@@ -8,6 +8,10 @@ bin/
 obj/
 out/
 testdocs/
+TestResults/
+TestResults-integration/
+coveragereport/
+coveragereport-integration/
 
 requirements/
 android-alert-app/

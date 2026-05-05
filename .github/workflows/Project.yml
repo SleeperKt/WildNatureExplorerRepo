@@ -260,8 +260,43 @@ jobs:
           dotnet-version: "8.0.x"
           cache: true
           cache-dependency-path: "**/*.csproj"
-      - name: Run unit tests
-        run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --filter "Category=Unit"
+
+      - name: Restore tests
+        run: dotnet restore ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj
+
+      - name: Unit tests + coverage (≥70% lines, Domain & Application)
+        run: >
+          dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj
+          -c Release
+          --filter "Category=Unit"
+          --settings ./WildNatureExplorer.Tests/CodeCoverage.runsettings
+          --results-directory "${{ github.workspace }}/TestResults"
+          --logger "trx;LogFileName=unit-results.trx"
+
+      - name: Coverage HTML report (ReportGenerator)
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5
+        with:
+          reports: "${{ github.workspace }}/TestResults/**/coverage.cobertura.xml"
+          targetdir: "${{ github.workspace }}/coveragereport"
+          reporttypes: "Html_Dark"
+
+      - name: Upload coverage HTML
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: coverage-html-${{ github.sha }}
+          path: coveragereport/
+          retention-days: 14
+
+      - name: Upload Cobertura XML + TRX (unit)
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: coverage-unit-data-${{ github.sha }}
+          path: |
+            TestResults/**/coverage.cobertura.xml
+            TestResults/**/*.trx
+          retention-days: 14
 
   integration-tests:
     name: Integration tests
@@ -280,9 +315,48 @@ jobs:
           dotnet-version: "8.0.x"
           cache: true
           cache-dependency-path: "**/*.csproj"
-      - name: Run integration tests
+      - name: Restore tests
         if: ${{ inputs.RUN_INTEGRATION_TESTS == true }}
-        run: dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj --filter "Category=Integration"
+        run: dotnet restore ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj
+
+      - name: Integration tests + coverage (Domain, Application, Infrastructure — HTML artifact)
+        if: ${{ inputs.RUN_INTEGRATION_TESTS == true }}
+        run: >
+          dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj
+          -c Release
+          --no-restore
+          --filter "Category=Integration"
+          --settings ./WildNatureExplorer.Tests/CodeCoverage.integration.runsettings
+          --results-directory "${{ github.workspace }}/TestResults-integration"
+          --logger "trx;LogFileName=integration-results.trx"
+          --logger "console;verbosity=normal"
+
+      - name: Coverage HTML report — integration (ReportGenerator)
+        if: ${{ inputs.RUN_INTEGRATION_TESTS == true }}
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5
+        with:
+          reports: "${{ github.workspace }}/TestResults-integration/**/coverage.cobertura.xml"
+          targetdir: "${{ github.workspace }}/coveragereport-integration"
+          reporttypes: "Html_Dark"
+
+      - name: Upload integration coverage HTML
+        uses: actions/upload-artifact@v4
+        if: ${{ inputs.RUN_INTEGRATION_TESTS == true && success() }}
+        with:
+          name: coverage-integration-html-${{ github.sha }}
+          path: coveragereport-integration/
+          retention-days: 14
+
+      - name: Upload integration Cobertura + TRX
+        uses: actions/upload-artifact@v4
+        if: ${{ inputs.RUN_INTEGRATION_TESTS == true && success() }}
+        with:
+          name: coverage-integration-data-${{ github.sha }}
+          path: |
+            TestResults-integration/**/coverage.cobertura.xml
+            TestResults-integration/**/*.trx
+          retention-days: 14
+
       - name: Skip integration tests (workflow input)
         if: ${{ inputs.RUN_INTEGRATION_TESTS != true }}
         run: echo "Skipping integration tests (RUN_INTEGRATION_TESTS=false)."
