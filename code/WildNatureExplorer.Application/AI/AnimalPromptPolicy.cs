@@ -3,32 +3,12 @@ using System.Text.RegularExpressions;
 namespace WildNatureExplorer.Application.AI.PromptPolicies;
 
 /// <summary>
-/// Wildlife-domain prompt policy applied to the user's typed question
-/// before it reaches the LLM.
-///
-/// <para>
-/// <b>Why phrase-based, not bare keywords?</b> The previous version blocked
-/// any prompt containing single substrings like <c>kill</c> / <c>weapon</c>.
-/// That made the assistant useless for legitimate wildlife topics:
-/// <list type="bullet">
-/// <item>"Killer whale", "killifish" → blocked.</item>
-/// <item>"Can a lion kill a human?" → blocked.</item>
-/// <item>Worse: when the AI itself answered something like
-///   "Bears can kill humans in self-defence", that text was saved in the
-///   conversation history. The next call sent the *full* history to the
-///   policy and threw — breaking the dialog forever.</item>
-/// </list>
-/// We now match on intent <i>phrases</i> (e.g. <c>"how to kill"</c>,
-/// <c>"build a bomb"</c>) with whitespace-normalised, case-insensitive
-/// substring matching. Wildlife-natural usage passes; explicit harmful
-/// instructions are still rejected.
-/// </para>
+/// Wildlife-domain guardrails on user prompts: phrase-based substring checks after whitespace normalisation (case-insensitive).
 /// </summary>
 public static class AnimalPromptPolicy
 {
     private static readonly string[] ForbiddenIntentPhrases =
     {
-        // Direct harm intents toward animals or humans
         "how to kill",
         "how do i kill",
         "how can i kill",
@@ -42,7 +22,6 @@ public static class AnimalPromptPolicy
         "how to poison",
         "how to hunt and kill",
 
-        // Weapons / explosives
         "how to make a bomb",
         "build a bomb",
         "make a bomb",
@@ -50,7 +29,6 @@ public static class AnimalPromptPolicy
         "build a weapon",
         "make a weapon",
 
-        // Drugs (recreational manufacture / sourcing)
         "how to make drugs",
         "how to cook meth",
         "how to make meth",
@@ -74,8 +52,6 @@ public static class AnimalPromptPolicy
             throw new InvalidOperationException(
                 "Prompt cannot be empty. Please ask a question about wildlife or nature.");
 
-        // Normalise so phrasing variants ("how   to  kill", "how\tto\nkill")
-        // still match the canonical phrase list.
         var normalised = Whitespace.Replace(userPrompt.ToLowerInvariant().Trim(), " ");
 
         var hit = ForbiddenIntentPhrases.FirstOrDefault(p => normalised.Contains(p));

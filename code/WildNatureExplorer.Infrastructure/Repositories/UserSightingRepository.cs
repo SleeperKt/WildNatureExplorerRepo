@@ -39,10 +39,7 @@ public class UserSightingRepository : IUserSightingRepository
         await _context.SaveChangesAsync();
     }
 
-    /// <summary>
-    /// Calls the PostgreSQL function <c>fn_user_nearby_sightings</c>.
-    /// All filtering / distance math runs inside Postgres on the GIST index.
-    /// </summary>
+    /// <summary>PostgreSQL <c>fn_user_nearby_sightings</c>.</summary>
     public async Task<List<NearbySightingResponse>> GetNearbyAsync(
         Guid userId,
         double latitude,
@@ -82,9 +79,6 @@ public class UserSightingRepository : IUserSightingRepository
             using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
             {
-                // The function returns Guid.Empty as a sentinel when the
-                // sighting isn't linked to a catalogued species; surface it
-                // as a true `null` so the API contract is consistent.
                 var rawSpeciesId = reader.GetGuid(1);
 
                 result.Add(new NearbySightingResponse

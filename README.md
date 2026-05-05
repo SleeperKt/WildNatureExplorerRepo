@@ -21,10 +21,12 @@ git clone https://github.com/aldrig/WildNatureExplorer.git
 cd WildNatureExplorer
 cp .env.example .env
 docker-compose up --build
+```
 
+API will be available at: http://localhost:5000/api  
+Swagger UI: http://localhost:5000/swagger  
 
-API will be available at: http://localhost:5000/api
-Swagger UI: http://localhost:5000/swagger
+Structured Markdown API docs (guides, OpenAPI JSON, Spectral): **[documentation/API/README.md](documentation/API/README.md)**
 
 ---
 

@@ -4,25 +4,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace WildNatureExplorer.Infrastructure.Migrations
 {
-    /// <summary>
-    /// Database hardening migration that closes the OLTP "minimum tier" gaps:
-    ///   * CHECK constraints on Rating, Role, lat/lng, AiSessions life-cycle, Users timestamps.
-    ///   * UNIQUE constraint on AiFeedbacks.SessionId (one feedback per session).
-    ///   * Reference-data seed for Sizes / Colors / Habitats / Countries (idempotent).
-    ///     Ensures CreatedAt/UpdatedAt exist on those tables before INSERT — EF applies this
-    ///     migration before AddIndexesAndAuditTrailFixed due to Migration id string ordering.
-    ///   * DBMS roles: app_read, app_write, wne_admin with least-privilege grants.
-    /// All statements are written to be idempotent so the migration is safe to re-run
-    /// against an already-bootstrapped database.
-    /// </summary>
+    /// <summary>CHECK constraints, unique AiFeedbacks per session, dimension audit columns, reference seed, DB roles. Idempotent SQL.</summary>
     public partial class DatabaseHardening : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // ----------------------------------------------------------------
-            // 1. CHECK constraints (data-integrity rules promised by the dictionary)
-            // ----------------------------------------------------------------
+            // CHECK constraints
             migrationBuilder.Sql(@"
                 DO $$ BEGIN
                     ALTER TABLE ""AiFeedbacks""
@@ -85,10 +73,7 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
             ");
 
-            // ----------------------------------------------------------------
-            // 2. One feedback per session – upgrade the existing index to UNIQUE.
-            //    Pre-cleans any duplicates by keeping the most recent row.
-            // ----------------------------------------------------------------
+            // AiFeedbacks: dedupe then unique SessionId index
             migrationBuilder.Sql(@"
                 DELETE FROM ""AiFeedbacks"" a
                 USING ""AiFeedbacks"" b
@@ -101,12 +86,7 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                     ON ""AiFeedbacks"" (""SessionId"");
             ");
 
-            // ----------------------------------------------------------------
-            // 2b. Audit columns on reference tables used by seed below.
-            //     EF orders migration IDs lexicographically; this migration's id
-            //     (20260428180000_...) runs *before* AddIndexesAndAuditTrailFixed
-            //     (20260428_Add...) unless we duplicate these guards here.
-            // ----------------------------------------------------------------
+            // Sizes / Colors / Habitats / Countries: CreatedAt + UpdatedAt if missing (ordering vs later migrations)
             migrationBuilder.Sql(@"
                 DO $$ BEGIN
                     ALTER TABLE ""Sizes"" ADD COLUMN ""CreatedAt"" timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP;
@@ -141,10 +121,7 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                 EXCEPTION WHEN duplicate_column THEN NULL; END $$;
             ");
 
-            // ----------------------------------------------------------------
-            // 3. Reference-data seed (fixed dimension tables).
-            //    Deterministic UUIDs + ON CONFLICT DO NOTHING => idempotent.
-            // ----------------------------------------------------------------
+            // Reference dimension seed
             migrationBuilder.Sql(@"
                 -- Sizes
                 INSERT INTO ""Sizes"" (""Id"", ""Name"", ""NormalizedName"", ""CreatedAt"", ""UpdatedAt"") VALUES
@@ -196,11 +173,7 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                 ON CONFLICT (""NormalizedName"") DO NOTHING;
             ");
 
-            // ----------------------------------------------------------------
-            // 4. DBMS roles & least-privilege grants.
-            //    The application will eventually connect as 'app_write'; reporting
-            //    tools as 'app_read'; only DBA tasks use 'wne_admin'.
-            // ----------------------------------------------------------------
+            // Roles app_read, app_write, wne_admin + grants
             migrationBuilder.Sql(@"
                 DO $$ BEGIN
                     CREATE ROLE app_read NOINHERIT;
@@ -246,7 +219,6 @@ namespace WildNatureExplorer.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            // 4 / 1. Drop grants and roles (best-effort; ignore if absent).
             migrationBuilder.Sql(@"
                 DO $$ BEGIN
                     REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM app_read, app_write, wne_admin;
@@ -259,14 +231,12 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                 DO $$ BEGIN DROP ROLE IF EXISTS app_read;  EXCEPTION WHEN OTHERS THEN NULL; END $$;
             ");
 
-            // 2. Restore the non-unique index on AiFeedbacks.SessionId.
             migrationBuilder.Sql(@"
                 DROP INDEX IF EXISTS ""IX_AiFeedbacks_SessionId"";
                 CREATE INDEX IF NOT EXISTS ""IX_AiFeedbacks_SessionId""
                     ON ""AiFeedbacks"" (""SessionId"");
             ");
 
-            // 1. Drop CHECK constraints.
             migrationBuilder.Sql(@"
                 ALTER TABLE ""AiFeedbacks""    DROP CONSTRAINT IF EXISTS ""CK_AiFeedbacks_Rating_Range"";
                 ALTER TABLE ""AiMessages""     DROP CONSTRAINT IF EXISTS ""CK_AiMessages_Role_Allowed"";
@@ -278,8 +248,6 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                 ALTER TABLE ""Users""          DROP CONSTRAINT IF EXISTS ""CK_Users_CreatedAt_LE_UpdatedAt"";
                 ALTER TABLE ""Users""          DROP CONSTRAINT IF EXISTS ""CK_Users_PasswordHash_NotEmpty"";
                 ALTER TABLE ""Users""          DROP CONSTRAINT IF EXISTS ""CK_Users_Email_Format"";
-
-                -- Reference seed rows are intentionally left in place on Down().
             ");
         }
     }

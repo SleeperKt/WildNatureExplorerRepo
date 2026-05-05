@@ -39,10 +39,8 @@ static string Require(IConfiguration config, string key)
         ?? throw new InvalidOperationException($"Configuration value '{key}' is missing");
 }
 
-// Returns null when the env value is missing or whitespace (Docker often passes "").
 static string? NonEmpty(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;
 
-// Builds Npgsql-style connection strings used by EF Core.
 static string BuildPostgreSqlConnectionString(string host, string port, string database, string username, string password) =>
     $"Host={host};" +
     $"Port={port};" +
@@ -50,7 +48,6 @@ static string BuildPostgreSqlConnectionString(string host, string port, string d
     $"Username={username};" +
     $"Password={password}";
 
-// Ensures LOGIN + CONNECT for the app DB role after migrations run as postgres (see DATABASE.md / docker-compose env).
 static async Task EnsureApplicationDbRoleCanLoginAsync(
     string ownerConnectionString,
     string roleName,
@@ -88,11 +85,13 @@ static async Task EnsureApplicationDbRoleCanLoginAsync(
 
 var builder = WebApplication.CreateBuilder(args);
 
+var skipHeavyStartupForOpenApi =
+    string.Equals(Environment.GetEnvironmentVariable("WNE_OPENAPI_GEN"), "1", StringComparison.Ordinal);
+
 var corsOriginsRaw = builder.Configuration["CORS_ORIGINS"];
 string[] corsOrigins;
 if (string.IsNullOrWhiteSpace(corsOriginsRaw))
 {
-    // Local defaults when CORS_ORIGINS is unset (docker-compose / dev machines).
     corsOrigins =
     [
         "http://localhost:5173",
@@ -229,6 +228,30 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
 {
+    c.SwaggerDoc(
+        "v1",
+        new OpenApiInfo
+        {
+            Title = "Wild Nature Explorer API",
+            Version = "v1",
+            Description =
+                "Wild Nature Explorer REST API: JWT auth, species catalogue, maps, user library, admin import, AI endpoints."
+        });
+
+    c.AddServer(
+        new OpenApiServer
+        {
+            Url = "http://localhost:5000",
+            Description = "Local / Docker Compose."
+        });
+
+    c.AddServer(
+        new OpenApiServer
+        {
+            Url = "https://wildnatureexplorerapi-e2a6hpc4gah0ceb5.italynorth-01.azurewebsites.net",
+            Description = "Production — Azure App Service."
+        });
+
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
@@ -267,6 +290,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+if (!skipHeavyStartupForOpenApi)
 {
     await using var migrateDb = new AppDbContext(
         new DbContextOptionsBuilder<AppDbContext>()
@@ -275,28 +299,30 @@ var app = builder.Build();
 
     await migrateDb.Database.MigrateAsync();
 
-    // When the API uses a distinct application role (e.g. app_write), LOGIN + CONNECT mirror .env credentials.
     if (!migrateUser.Equals(dbUser, StringComparison.Ordinal))
         await EnsureApplicationDbRoleCanLoginAsync(migrateConnectionString, dbUser, dbPassword);
 }
 
-using (var scope = app.Services.CreateScope())
+if (!skipHeavyStartupForOpenApi)
 {
-    var roleRepo = scope.ServiceProvider.GetRequiredService<IRoleRepository>();
-    var roles = new[]
+    using (var scope = app.Services.CreateScope())
     {
-        ("User", "Default role for all registered users"),
-        ("Admin", "Administrator with full privileges"),
-        ("Moderator", "Moderator role assigned by Admin")
-    };
-
-    foreach (var (name, desc) in roles)
-    {
-        var existing = await roleRepo.GetByNameAsync(name);
-        if (existing == null)
+        var roleRepo = scope.ServiceProvider.GetRequiredService<IRoleRepository>();
+        var roles = new[]
         {
-            var role = new Role(Guid.NewGuid(), name, desc);
-            await roleRepo.AddAsync(role);
+            ("User", "Default role for all registered users"),
+            ("Admin", "Administrator with full privileges"),
+            ("Moderator", "Moderator role assigned by Admin")
+        };
+
+        foreach (var (name, desc) in roles)
+        {
+            var existing = await roleRepo.GetByNameAsync(name);
+            if (existing == null)
+            {
+                var role = new Role(Guid.NewGuid(), name, desc);
+                await roleRepo.AddAsync(role);
+            }
         }
     }
 }
@@ -309,7 +335,7 @@ app.UseRouting();
 
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseCors(); // или "DevCors"
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

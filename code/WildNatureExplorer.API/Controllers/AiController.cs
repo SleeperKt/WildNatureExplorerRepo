@@ -8,6 +8,9 @@ using WildNatureExplorer.Application.DTOs.AI;
 
 namespace WildNatureExplorer.API.Controllers;
 
+/// <summary>
+/// AI-assisted wildlife image analysis and chat (JWT required; fixed-window rate limiting on this controller).
+/// </summary>
 [ApiController]
 [Route("api/ai")]
 [Authorize]
@@ -59,7 +62,6 @@ public class AiController : ControllerBase
 
     private static string? ExtractQuestionFromBody(System.Text.Json.JsonElement body)
     {
-        // Try common names and casing variations
         if (body.ValueKind == System.Text.Json.JsonValueKind.Object)
         {
             if (body.TryGetProperty("questionAboutNature", out var p) && p.ValueKind == System.Text.Json.JsonValueKind.String)
@@ -71,7 +73,7 @@ public class AiController : ControllerBase
             if (body.TryGetProperty("Question", out p) && p.ValueKind == System.Text.Json.JsonValueKind.String)
                 return p.GetString();
         }
-        // If it's a raw string
+
         if (body.ValueKind == System.Text.Json.JsonValueKind.String) return body.GetString();
         return null;
     }

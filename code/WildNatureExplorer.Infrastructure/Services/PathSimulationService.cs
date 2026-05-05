@@ -20,9 +20,6 @@ public class PathSimulationService : IPathSimulationService
         _speciesRepository = speciesRepository;
     }
 
-    /// <summary>
-    /// Uses PostgreSQL function to simulate path with danger checking
-    /// </summary>
     public async Task<PathSimulationResponse> SimulatePathDatabaseAsync(PathSimulationRequest request)
     {
         try
@@ -33,10 +30,8 @@ public class PathSimulationService : IPathSimulationService
                 SimulatedAt = DateTime.UtcNow
             };
 
-            // Convert waypoints to JSONB for PostgreSQL
             var waypointsJson = JsonSerializer.Serialize(request.Waypoints);
 
-            // Use raw SQL query through EF Core
             var sql = @"
                 SELECT 
                     step_id, 
@@ -58,7 +53,6 @@ public class PathSimulationService : IPathSimulationService
                     @dangerRadiusKm
                 )";
 
-            // Execute raw SQL and read results
             using (var command = _context.Database.GetDbConnection().CreateCommand())
             {
                 await _context.Database.OpenConnectionAsync();
@@ -66,7 +60,6 @@ public class PathSimulationService : IPathSimulationService
                 {
                     command.CommandText = sql;
 
-                    // Add parameters
                     var paramCountry = command.CreateParameter();
                     paramCountry.ParameterName = "@countryId";
                     paramCountry.Value = request.CountryId;
@@ -104,7 +97,6 @@ public class PathSimulationService : IPathSimulationService
                             var alertId = reader.IsDBNull(6) ? Guid.Empty : reader.GetGuid(6);
                             var alertType = reader.GetString(7);
 
-                            // Add path step
                             if (alertType == "PATH")
                             {
                                 pathSteps.Add(new SimulationStepDto
@@ -117,7 +109,6 @@ public class PathSimulationService : IPathSimulationService
                                     DistanceFromStartKm = distanceFromStart
                                 });
                             }
-                            // Add alert (only once per animal per step to avoid duplicates)
                             else if (alertType == "ALERT")
                             {
                                 var animalId = reader.GetGuid(8);
@@ -165,9 +156,6 @@ public class PathSimulationService : IPathSimulationService
         }
     }
 
-    /// <summary>
-    /// Simulates path using client-side algorithm (for comparison/fallback)
-    /// </summary>
     public async Task<PathSimulationResponse> SimulatePathClientAsync(PathSimulationRequest request)
     {
         var response = new PathSimulationResponse
@@ -178,7 +166,6 @@ public class PathSimulationService : IPathSimulationService
 
         try
         {
-            // Get dangerous species for the country
             var species = await _speciesRepository.GetByCountryAsync(request.CountryId);
             var dangerousSpecies = species.Where(s => s.IsDangerous).ToList();
 
@@ -188,7 +175,6 @@ public class PathSimulationService : IPathSimulationService
             var stepId = 0;
             double totalDistance = 0;
 
-            // Simulate path
             for (int segment = 0; segment < request.Waypoints.Count - 1; segment++)
             {
                 var startWaypoint = request.Waypoints[segment];
@@ -200,7 +186,6 @@ public class PathSimulationService : IPathSimulationService
                     var currentLat = startWaypoint.Lat + (endWaypoint.Lat - startWaypoint.Lat) * fraction;
                     var currentLng = startWaypoint.Lng + (endWaypoint.Lng - startWaypoint.Lng) * fraction;
 
-                    // Calculate distance traveled
                     if (step == 0 && segment == 0)
                     {
                         totalDistance = 0;
@@ -214,7 +199,6 @@ public class PathSimulationService : IPathSimulationService
                         totalDistance += segmentDistance;
                     }
 
-                    // Add path step
                     pathSteps.Add(new SimulationStepDto
                     {
                         StepId = stepId,
@@ -225,7 +209,6 @@ public class PathSimulationService : IPathSimulationService
                         DistanceFromStartKm = totalDistance
                     });
 
-                    // Check proximity to dangerous animals
                     foreach (var animal in dangerousSpecies)
                     {
                         foreach (var location in animal.Locations)
@@ -279,9 +262,6 @@ public class PathSimulationService : IPathSimulationService
         return response;
     }
 
-    /// <summary>
-    /// Haversine formula to calculate distance between two coordinates
-    /// </summary>
     private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {
         const double earthRadiusKm = 6371.0;

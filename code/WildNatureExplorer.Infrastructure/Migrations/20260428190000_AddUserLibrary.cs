@@ -5,26 +5,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace WildNatureExplorer.Infrastructure.Migrations
 {
-    /// <summary>
-    /// Adds the personal "User Library" feature:
-    ///   * UserSightings table (each animal saved by a user with coords + photo).
-    ///   * Spatial GIST index on (Longitude, Latitude) for radius queries.
-    ///   * PostgreSQL function fn_user_nearby_sightings(user_id, lat, lng, radius_km)
-    ///     that returns the user's saved sightings inside the radius, ordered by distance.
-    /// </summary>
+    /// <summary>UserSightings, spatial indexes, <c>fn_user_nearby_sightings</c>.</summary>
     public partial class AddUserLibrary : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // ----------------------------------------------------------------
-            // 1. PostGIS extension – required for ST_DWithin / ST_Distance
-            // ----------------------------------------------------------------
             migrationBuilder.Sql(@"CREATE EXTENSION IF NOT EXISTS postgis;");
 
-            // ----------------------------------------------------------------
-            // 2. UserSightings table
-            // ----------------------------------------------------------------
             migrationBuilder.CreateTable(
                 name: "UserSightings",
                 columns: table => new
@@ -59,7 +47,6 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
-            // CHECK constraints on lat/lng (the entity also enforces them, this is the DB safety net)
             migrationBuilder.Sql(@"
                 ALTER TABLE ""UserSightings""
                     ADD CONSTRAINT ""CK_UserSightings_Latitude_Range""
@@ -70,7 +57,6 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                     CHECK (""Longitude"" BETWEEN -180 AND 180);
             ");
 
-            // Indexes
             migrationBuilder.CreateIndex(
                 name: "IX_UserSightings_UserId",
                 table: "UserSightings",
@@ -92,28 +78,18 @@ namespace WildNatureExplorer.Infrastructure.Migrations
                 columns: new[] { "UserId", "SpeciesId", "SightedAt" },
                 unique: true);
 
-            // Spatial GIST index on the geography point for fast radius queries.
             migrationBuilder.Sql(@"
                 CREATE INDEX IF NOT EXISTS ""IX_UserSightings_Geo""
                     ON ""UserSightings""
                     USING GIST (geography(ST_SetSRID(ST_MakePoint(""Longitude"", ""Latitude""), 4326)));
             ");
 
-            // Reverse spatial index on SpeciesLocations too — also needed by the
-            // existing `simulate_path_with_dangers` function and a recurring audit gap.
             migrationBuilder.Sql(@"
                 CREATE INDEX IF NOT EXISTS ""IX_SpeciesLocations_Geo""
                     ON ""SpeciesLocations""
                     USING GIST (geography(ST_SetSRID(ST_MakePoint(""Longitude"", ""Latitude""), 4326)));
             ");
 
-            // ----------------------------------------------------------------
-            // 3. fn_user_nearby_sightings — the User Library "find animals around me" function.
-            //
-            //    Returns every sighting the user owns within p_radius_km of
-            //    (p_lat, p_lng), enriched with species info and the exact great-circle
-            //    distance, ordered by distance ascending.
-            // ----------------------------------------------------------------
             migrationBuilder.Sql(@"
                 CREATE OR REPLACE FUNCTION fn_user_nearby_sightings(
                     p_user_id     uuid,
@@ -208,7 +184,6 @@ namespace WildNatureExplorer.Infrastructure.Migrations
 
             migrationBuilder.DropTable(name: "UserSightings");
 
-            // PostGIS extension is intentionally left installed.
         }
     }
 }

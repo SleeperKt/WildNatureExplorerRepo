@@ -1,9 +1,14 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using WildNatureExplorer.Application.Interfaces.Services;
+using Swashbuckle.AspNetCore.Annotations;
 using WildNatureExplorer.Application.DTOs.Species;
+using WildNatureExplorer.Application.Interfaces.Services;
 
 namespace WildNatureExplorer.API.Controllers;
 
+/// <summary>
+/// Public species catalogue: lookup, filtered search, name autocomplete.
+/// </summary>
 [ApiController]
 [Route("api/species")]
 public class SpeciesController : ControllerBase
@@ -15,7 +20,13 @@ public class SpeciesController : ControllerBase
         _speciesService = speciesService;
     }
 
+    /// <summary>
+    /// Full species detail including size, colours, habitats, and countries.
+    /// </summary>
     [HttpGet("{id:guid}")]
+    [SwaggerOperation(Summary = "Get species by unique identifier.")]
+    [ProducesResponseType(typeof(SpeciesDetailsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Get(Guid id)
     {
         var species = await _speciesService.GetAsync(id);
@@ -38,7 +49,12 @@ public class SpeciesController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Applies optional danger/rarity filters and up to five GUID lists per dimension (countries, habitats, colours, sizes).
+    /// </summary>
     [HttpPost("search")]
+    [SwaggerOperation(Summary = "Search species with structured filters.")]
+    [ProducesResponseType(typeof(IEnumerable<SpeciesShortDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Search([FromBody] SpeciesSearchDto request)
     {
         var result = await _speciesService.SearchAsync(
@@ -60,7 +76,14 @@ public class SpeciesController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Case-insensitive match on common name; returns 400 when query is empty.
+    /// </summary>
     [HttpGet("by-name")]
+    [SwaggerOperation(Summary = "Resolve species by common name query string.")]
+    [ProducesResponseType(typeof(SpeciesDetailsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetByCommonName([FromQuery] string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -87,7 +110,12 @@ public class SpeciesController : ControllerBase
         return Ok(response);
     }
 
+    /// <summary>
+    /// Prefix-based suggestions for search boxes (bounded by service implementation).
+    /// </summary>
     [HttpGet("autocomplete")]
+    [SwaggerOperation(Summary = "Autocomplete common names by prefix.")]
+    [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
     public async Task<IActionResult> Autocomplete([FromQuery] SpeciesAutocompleteDto request)
     {
         var result = await _speciesService.GetNameSuggestionsAsync(request.Prefix);
