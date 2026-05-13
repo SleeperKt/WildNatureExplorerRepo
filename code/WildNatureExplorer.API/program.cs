@@ -325,6 +325,10 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Wild Nature Explorer API v1");
+});
 app.UseSwaggerUI();
 app.UseCors();
 
