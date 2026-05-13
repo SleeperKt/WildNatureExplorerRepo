@@ -17,7 +17,7 @@ using WildNatureExplorer.Application;
 using WildNatureExplorer.Application.DTOs.AI;
 using FluentValidation.AspNetCore;
 using WildNatureExplorer.API.Middlewares;
-using Microsoft.OpenApi;
+using Microsoft.OpenApi.Models;
 using System.Reflection;
 using WildNatureExplorer.Application.DTOs.Admin;
 using FluentValidation;
