@@ -251,7 +251,7 @@ builder.Services.AddSwaggerGen(c =>
             Url = "https://wildnatureexplorerapi-e2a6hpc4gah0ceb5.italynorth-01.azurewebsites.net",
             Description = "Production — Azure App Service."
         });
-        
+    
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
