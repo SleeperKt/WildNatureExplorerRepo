@@ -17,7 +17,7 @@ using WildNatureExplorer.Application;
 using WildNatureExplorer.Application.DTOs.AI;
 using FluentValidation.AspNetCore;
 using WildNatureExplorer.API.Middlewares;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using System.Reflection;
 using WildNatureExplorer.Application.DTOs.Admin;
 using FluentValidation;
@@ -251,7 +251,9 @@ builder.Services.AddSwaggerGen(c =>
             Url = "https://wildnatureexplorerapi-e2a6hpc4gah0ceb5.italynorth-01.azurewebsites.net",
             Description = "Production — Azure App Service."
         });
-
+    
+    c.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0;
+    
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
