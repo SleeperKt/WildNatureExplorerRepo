@@ -17,7 +17,7 @@ using WildNatureExplorer.Application;
 using WildNatureExplorer.Application.DTOs.AI;
 using FluentValidation.AspNetCore;
 using WildNatureExplorer.API.Middlewares;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using System.Reflection;
 using WildNatureExplorer.Application.DTOs.Admin;
 using FluentValidation;
@@ -266,20 +266,11 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Enter JWT Token"
     });
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    c.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+            [new OpenApiSecuritySchemeReference("Bearer", document, null)] = []
+        });
 
     c.EnableAnnotations(
         enableAnnotationsForInheritance: false,

@@ -1,5 +1,5 @@
 # Stage 1: build
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
 WORKDIR /src
 
 COPY ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj ./WildNatureExplorer.API/
@@ -17,7 +17,7 @@ RUN dotnet publish -c Release -o /app/publish --no-self-contained
 RUN dotnet nuget locals all --clear
 
 # Stage 2: runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
 WORKDIR /app
 
 COPY --from=build /app/publish .
