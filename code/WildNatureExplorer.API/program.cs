@@ -251,9 +251,7 @@ builder.Services.AddSwaggerGen(c =>
             Url = "https://wildnatureexplorerapi-e2a6hpc4gah0ceb5.italynorth-01.azurewebsites.net",
             Description = "Production — Azure App Service."
         });
-    
-    c.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0;
-    
+        
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
