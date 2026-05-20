@@ -206,12 +206,12 @@ export default function MainPage() {
           {/* Quick Stats */}
           <div className="hero-stats">
             <div className="stat">
-              <span className="stat-number">10K+</span>
+              <span className="stat-number">100+</span>
               <span className="stat-label">Species</span>
             </div>
             <div className="stat-divider"></div>
             <div className="stat">
-              <span className="stat-number">150+</span>
+              <span className="stat-number">15+</span>
               <span className="stat-label">Countries</span>
             </div>
             <div className="stat-divider"></div>
