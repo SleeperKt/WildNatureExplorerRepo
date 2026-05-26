@@ -14,10 +14,10 @@ jobs:
     uses: ./.github/workflows/Project.yml
     with:
       ENVIRONMENT: test
-      SKIP_DB_SETUP: false
-      SKIP_DEPLOY: false
-      RUN_INTEGRATION_TESTS: true
-      DOCKER_BUILD: true
+      SKIP_DB_SETUP: true
+      SKIP_DEPLOY: true
+      RUN_INTEGRATION_TESTS: false
+      DOCKER_BUILD: false
     secrets:
       JWT_KEY: ${{ secrets.JWT_KEY }}
       JWT_ISSUER: ${{ secrets.JWT_ISSUER }}

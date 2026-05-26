@@ -14,7 +14,7 @@ jobs:
     with:
       ENVIRONMENT: dev
       SKIP_DB_SETUP: false
-      SKIP_DEPLOY: false
+      SKIP_DEPLOY: true
       RUN_INTEGRATION_TESTS: true
       DOCKER_BUILD: true
     secrets:
