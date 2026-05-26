@@ -1,16 +1,50 @@
-# React + Vite
+﻿# Wild Nature Explorer – Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This directory contains the Single Page Application (SPA) for the Wild Nature Explorer platform. It provides an interactive UI for wildlife exploration, species cataloging, map tracking, and AI-driven features.
 
-Currently, two official plugins are available:
+## Tech Stack
+- **Framework:** React 19
+- **Build Tool:** Vite 7
+- **Routing:** React Router v7
+- **Maps & Geolocation:** Leaflet + React-Leaflet
+- **State/Data Fetching:** Axios
+- **Animations:** GSAP
+- **Mobile Integration:** Capacitor (for Android app generation)
+- **Code Quality:** ESLint & Prettier
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Getting Started
 
-## React Compiler
+### Prerequisites
+- **Node.js**: Version 20 or LTS compatible with Vite 7.
+- **Backend API**: The backend should be running locally (usually on port 5000) for full functionality.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Installation
+```bash
+npm ci
+```
 
-## Expanding the ESLint configuration
+### Local Development
+To run the development server with Hot Module Replacement (HMR):
+```bash
+npm run dev
+```
+The server will start at `http://localhost:5173`. By default, Vite is configured to proxy `/api` requests to `http://localhost:5000`.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Environment Variables
+To override the default API proxy target, create a `.env` file based on `.env.example` (if present) or add:
+```env
+VITE_DEV_PROXY_TARGET=http://your-custom-backend-url:5000
+```
+For production Docker builds, the base URL is provided via the `WNE_API_PUBLIC_BASE_URL` build argument.
+
+## Available Scripts
+
+- `npm run dev`: Starts the local development server.
+- `npm run build`: Builds the app for production to the `dist/` folder.
+- `npm run preview`: Bootstraps a local static web server to preview the production build.
+- `npm run lint`: Analyzes code for potential errors using ESLint.
+- `npm run format`: Formats code automatically using Prettier.
+- `npm run format:check`: Checks if the code matches Prettier formatting rules without making changes.
+
+## Mobile Support (Capacitor)
+This frontend is integrated with Capacitor to build the Android application located in `../android-alert-app`. Capacitor bundles the output from `dist/` into native mobile views.
