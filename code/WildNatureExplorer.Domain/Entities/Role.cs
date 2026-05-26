@@ -9,12 +9,12 @@ public class Role : Entity
     public Role(Guid id, string roleName, string description)
     {
         Id = id;
-        RoleName = roleName;
-        Description = description;
+        RoleName = roleName ?? string.Empty;
+        Description = description ?? string.Empty;
     }
 
-    public string RoleName { get; private set; }   // admin, user, support
-    public string Description { get; private set; }
+    public string RoleName { get; private set; } = string.Empty;   // admin, user, support
+    public string Description { get; private set; } = string.Empty;
 
     public IReadOnlyCollection<UserRole> Users => _users;
     private readonly List<UserRole> _users = new();

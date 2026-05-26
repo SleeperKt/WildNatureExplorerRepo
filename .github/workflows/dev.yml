@@ -1,5 +1,6 @@
 name: Dev Environment CI/CD
 on:
+  workflow_dispatch:
   push:
     branches:
       - dev
@@ -9,19 +10,31 @@ on:
 
 jobs:
   dev-pipeline:
-    uses: ./.github/workflows/Backend.yml
+    uses: ./.github/workflows/Project.yml
     with:
       ENVIRONMENT: dev
       SKIP_DB_SETUP: false
       SKIP_DEPLOY: false
       RUN_INTEGRATION_TESTS: true
       DOCKER_BUILD: true
-      DOCKER_PUSH: true
     secrets:
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+      JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+      JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      HF_API_KEY: ${{ secrets.HF_API_KEY }}
+      ANIMALDETECT_API_KEY: ${{ secrets.ANIMALDETECT_API_KEY }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_NAME: ${{ secrets.DB_NAME }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      DOCKER_REGISTRY_URL: ${{ secrets.DOCKER_REGISTRY_URL }}
-      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+      WNE_API_PUBLIC_BASE_URL: ${{ secrets.WNE_API_PUBLIC_BASE_URL }}
+      CORS_ORIGINS: ${{ secrets.CORS_ORIGINS }}
+      AZURE_WEBAPP_API_NAME: ${{ secrets.AZURE_WEBAPP_API_NAME }}
+      AZURE_WEBAPP_FRONTEND_NAME: ${{ secrets.AZURE_WEBAPP_FRONTEND_NAME }}
+      WNE_FRONTEND_PUBLIC_URL: ${{ secrets.WNE_FRONTEND_PUBLIC_URL }}
