@@ -27,6 +27,7 @@ using WildNatureExplorer.Application.Common;
 using WildNatureExplorer.Application.Options;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.HttpOverrides;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -281,6 +282,18 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+var forwardOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto
+};
+
+forwardOptions.KnownNetworks.Clear();
+forwardOptions.KnownProxies.Clear();
+
+app.UseForwardedHeaders(forwardOptions);
+
 if (!skipHeavyStartupForOpenApi)
 {
     await using var migrateDb = new AppDbContext(
@@ -329,7 +342,6 @@ app.UseSwaggerUI(options =>
 {
     options.SwaggerEndpoint("/swagger/v1/swagger.json", "Wild Nature Explorer API v1");
 });
-app.UseSwaggerUI();
 app.UseCors();
 
 app.UseAuthentication();
