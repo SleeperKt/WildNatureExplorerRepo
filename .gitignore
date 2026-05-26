@@ -1,19 +1,24 @@
-# Visual Studio
 .vs/
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
 
-# Build results
 bin/
 obj/
 out/
+testdocs/
+TestResults/
+TestResults-integration/
+coveragereport/
+coveragereport-integration/
 
-# Rider
-.idea/
+requirements/
+android-alert-app/
+docs(not)/
+problem/
+documentation/
 
-# .NET Core
 *.dll
 *.exe
 *.pdb
@@ -21,20 +26,14 @@ out/
 *.log
 *.vsix
 
-# NuGet
 *.nupkg
 *.snupkg
 packages/
-# Если используешь PackageReference, можно убрать
-# packages/
 
-# Entity Framework
 *.db
 *.db-shm
 *.db-wal
-Migrations/
 
-# Docker
 docker-compose.override.yml
 **/Dockerfile.*.local
 **/docker-compose.override.yml
@@ -42,15 +41,12 @@ docker-compose.override.yml
 **/docker-compose.*.override.yml
 **/docker-compose.override*.yml
 
-# Environment files
 .env
 .env.local
 .env.*.local
 
-# Rider / ReSharper
 .idea/
 *.sln.iml
 *.DotSettings.user
 
-# Logs
 *.log

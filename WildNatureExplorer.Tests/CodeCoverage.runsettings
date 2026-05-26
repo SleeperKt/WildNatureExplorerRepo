@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Exclude>[WildNatureExplorer.Tests]*</Exclude>
+          <ExcludeByFile>**/WildNatureExplorer.Infrastructure/Migrations/**/*.cs</ExcludeByFile>
+          <!-- Business-logic gate: Domain + Application (Infrastructure/API exercised separately). -->
+          <Include>[WildNatureExplorer.Domain]*,[WildNatureExplorer.Application]*</Include>
+          <Threshold>70</Threshold>
+          <ThresholdType>line</ThresholdType>
+          <ThresholdStat>total</ThresholdStat>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

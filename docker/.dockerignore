@@ -1,0 +1,2 @@
+# Deprecated for builds: Docker reads `.dockerignore` from the **build context root**
+# (repository root when using `docker-compose.yml`). Rules live in `/.dockerignore`.

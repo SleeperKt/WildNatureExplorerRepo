@@ -1,0 +1,644 @@
+name: Backend & Frontend CI/CD
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT:
+        description: "GitHub Environment name (dev / test / prod). Used for deploy gates and ASPNETCORE_ENVIRONMENT mapping."
+        required: true
+        type: string
+      SKIP_DB_SETUP:
+        description: "Skip DB setup"
+        required: false
+        default: false
+        type: boolean
+      SKIP_DEPLOY:
+        description: "Skip deploy"
+        required: false
+        default: false
+        type: boolean
+      RUN_INTEGRATION_TESTS:
+        description: "Run integration tests"
+        required: true
+        default: true
+        type: boolean
+      DOCKER_BUILD:
+        description: "Build Docker images"
+        required: true
+        default: true
+        type: boolean
+    secrets:
+      JWT_KEY:
+        required: true
+      JWT_ISSUER:
+        required: true
+      JWT_AUDIENCE:
+        required: true
+      GROQ_API_KEY:
+        required: true
+      HF_API_KEY:
+        required: true
+      ANIMALDETECT_API_KEY:
+        required: true
+      DOCKERHUB_USERNAME:
+        required: true
+      DOCKERHUB_TOKEN:
+        required: true
+      AZURE_CREDENTIALS:
+        required: true
+      DB_HOST:
+        required: true
+      DB_PORT:
+        required: true
+      DB_NAME:
+        required: true
+      DB_USER:
+        required: true
+      DB_PASSWORD:
+        required: true
+      ADMIN_EMAIL:
+        required: true
+      WNE_API_PUBLIC_BASE_URL:
+        required: true
+      CORS_ORIGINS:
+        required: true
+      CI_FAILURE_WEBHOOK_URL:
+        required: false
+      AZURE_WEBAPP_API_NAME:
+        required: true
+      AZURE_WEBAPP_FRONTEND_NAME:
+        required: true
+      WNE_FRONTEND_PUBLIC_URL:
+        required: false
+
+jobs:
+  backend-build:
+    name: Backend — build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Restore dependencies
+        run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
+      - name: NuGet vulnerability scan
+        run: dotnet list ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj package --vulnerable --include-transitive
+
+      - name: Build project
+        run: dotnet build ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj --no-restore --configuration Release
+
+      - name: Publish API (artifact)
+        run: dotnet publish ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj --no-restore --configuration Release -o ./publish-api
+
+      - name: Upload API publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wne-api-publish-${{ github.sha }}
+          path: publish-api/
+          retention-days: 14
+
+  backend-lint:
+    name: Backend — lint
+    runs-on: ubuntu-latest
+    needs: backend-build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+      - name: Run dotnet format
+        run: dotnet format ./WildNatureExplorer.sln --verify-no-changes --verbosity minimal
+
+  frontend-build:
+    name: Frontend — audit & build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit
+        run: npm audit --audit-level=moderate
+
+      - name: Build
+        env:
+          VITE_API_URL: ${{ secrets.WNE_API_PUBLIC_BASE_URL }}
+        run: npm run build
+
+      - name: Upload frontend dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wne-frontend-dist-${{ github.sha }}
+          path: frontend/dist/
+          retention-days: 14
+
+  frontend-prettier:
+    name: Frontend — Prettier
+    runs-on: ubuntu-latest
+    needs: frontend-build
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prettier (check)
+        run: npm run format:check
+
+  db-setup:
+    name: DB setup (CI Postgres + EF)
+    runs-on: ubuntu-latest
+    needs: backend-build
+    if: ${{ inputs.SKIP_DB_SETUP != true }}
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_NAME: wild_nature_explorer
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+      JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+      JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: wild_nature_explorer
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Wait for PostgreSQL
+        run: |
+          echo "Waiting for PostgreSQL..."
+          for i in {1..30}; do
+            pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER && break
+            sleep 2
+          done
+
+      - name: Install dotnet-ef
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.*
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Restore dependencies
+        run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
+      - name: Run EF migrations (CI database)
+        run: |
+          dotnet ef database update \
+            --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
+            --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
+      - name: List migrations
+        run: |
+          dotnet ef migrations list \
+            --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
+            --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    needs: [backend-build, backend-lint]
+    env:
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Restore tests
+        run: dotnet restore ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj
+
+      - name: Unit tests + coverage (≥70% lines, Domain & Application)
+        run: >
+          dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj
+          -c Release
+          --filter "Category=Unit"
+          --settings ./WildNatureExplorer.Tests/CodeCoverage.runsettings
+          --results-directory "${{ github.workspace }}/TestResults"
+          --logger "trx;LogFileName=unit-results.trx"
+
+      - name: Coverage HTML report (ReportGenerator)
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5
+        with:
+          reports: "${{ github.workspace }}/TestResults/**/coverage.cobertura.xml"
+          targetdir: "${{ github.workspace }}/coveragereport"
+          reporttypes: "Html_Dark"
+
+      - name: Upload coverage HTML
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: coverage-html-${{ github.sha }}
+          path: coveragereport/
+          retention-days: 14
+
+      - name: Upload Cobertura XML + TRX (unit)
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: coverage-unit-data-${{ github.sha }}
+          path: |
+            TestResults/**/coverage.cobertura.xml
+            TestResults/**/*.trx
+          retention-days: 14
+
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, frontend-prettier]
+    env:
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+      - name: Restore tests
+        if: ${{ inputs.RUN_INTEGRATION_TESTS == true }}
+        run: dotnet restore ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj
+
+      - name: Integration tests + coverage (Domain, Application, Infrastructure — HTML artifact)
+        if: ${{ inputs.RUN_INTEGRATION_TESTS == true }}
+        run: >
+          dotnet test ./WildNatureExplorer.Tests/WildNatureExplorer.Tests.csproj
+          -c Release
+          --no-restore
+          --filter "Category=Integration"
+          --settings ./WildNatureExplorer.Tests/CodeCoverage.integration.runsettings
+          --results-directory "${{ github.workspace }}/TestResults-integration"
+          --logger "trx;LogFileName=integration-results.trx"
+          --logger "console;verbosity=normal"
+
+      - name: Coverage HTML report — integration (ReportGenerator)
+        if: ${{ inputs.RUN_INTEGRATION_TESTS == true }}
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5
+        with:
+          reports: "${{ github.workspace }}/TestResults-integration/**/coverage.cobertura.xml"
+          targetdir: "${{ github.workspace }}/coveragereport-integration"
+          reporttypes: "Html_Dark"
+
+      - name: Upload integration coverage HTML
+        uses: actions/upload-artifact@v4
+        if: ${{ inputs.RUN_INTEGRATION_TESTS == true && success() }}
+        with:
+          name: coverage-integration-html-${{ github.sha }}
+          path: coveragereport-integration/
+          retention-days: 14
+
+      - name: Upload integration Cobertura + TRX
+        uses: actions/upload-artifact@v4
+        if: ${{ inputs.RUN_INTEGRATION_TESTS == true && success() }}
+        with:
+          name: coverage-integration-data-${{ github.sha }}
+          path: |
+            TestResults-integration/**/coverage.cobertura.xml
+            TestResults-integration/**/*.trx
+          retention-days: 14
+
+      - name: Skip integration tests (workflow input)
+        if: ${{ inputs.RUN_INTEGRATION_TESTS != true }}
+        run: echo "Skipping integration tests (RUN_INTEGRATION_TESTS=false)."
+        
+  supabase-db-migrations:
+    name: Apply migrations (Supabase Postgres)
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    if: ${{ inputs.SKIP_DEPLOY != true }}
+
+    env:
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
+      JWT_ISSUER: ${{ secrets.JWT_ISSUER }}
+      JWT_AUDIENCE: ${{ secrets.JWT_AUDIENCE }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Install dotnet-ef
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.*
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      - name: Restore dependencies
+        run: dotnet restore ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
+      - name: Run EF migrations (Supabase DB)
+        run: |
+          dotnet ef database update \
+            --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
+            --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj \
+            --connection "Host=${{ secrets.DB_HOST }};Port=${{ secrets.DB_PORT }};Database=${{ secrets.DB_NAME }};Username=${{ secrets.DB_USER }};Password=${{ secrets.DB_PASSWORD }};SSL Mode=Require;Trust Server Certificate=true"
+
+      - name: List applied migrations
+        run: |
+          dotnet ef migrations list \
+            --project ./code/WildNatureExplorer.Infrastructure/WildNatureExplorer.Infrastructure.csproj \
+            --startup-project ./code/WildNatureExplorer.API/WildNatureExplorer.API.csproj
+
+  docker-build-api:
+    name: Docker — API build & push
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    if: ${{ inputs.DOCKER_BUILD == true }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push API image
+        run: |
+          docker build \
+            -f docker/Dockerfile \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:${{ github.sha }} \
+            .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-api:${{ github.sha }}
+
+  docker-build-frontend:
+    name: Docker — frontend build & push
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    if: ${{ inputs.DOCKER_BUILD == true }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push frontend image
+        run: |
+          docker build \
+            -f frontend/Dockerfile \
+            --build-arg WNE_API_PUBLIC_BASE_URL="${{ secrets.WNE_API_PUBLIC_BASE_URL }}" \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/wne-web:latest \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/wne-web:${{ github.sha }} \
+            .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-web:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/wne-web:${{ github.sha }}
+
+  deploy-api:
+    name: Deploy API (Azure Web App container)
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.ENVIRONMENT }}
+    needs: [docker-build-api, supabase-db-migrations]
+    if: ${{ inputs.SKIP_DEPLOY != true }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set Azure App Service settings (API)
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_API_NAME }}
+          app-settings-json: |
+            [
+              { "name": "JWT_KEY", "value": "${{ secrets.JWT_KEY }}" },
+              { "name": "JWT_ISSUER", "value": "${{ secrets.JWT_ISSUER }}" },
+              { "name": "JWT_AUDIENCE", "value": "${{ secrets.JWT_AUDIENCE }}" },
+              { "name": "ASPNETCORE_ENVIRONMENT", "value": "${{ inputs.ENVIRONMENT == 'prod' && 'Production' || inputs.ENVIRONMENT == 'test' && 'Staging' || 'Development' }}" },
+
+              { "name": "DB_HOST", "value": "${{ secrets.DB_HOST }}" },
+              { "name": "DB_PORT", "value": "${{ secrets.DB_PORT }}" },
+              { "name": "DB_USER", "value": "${{ secrets.DB_USER }}" },
+              { "name": "DB_PASSWORD", "value": "${{ secrets.DB_PASSWORD }}" },
+              { "name": "DB_NAME", "value": "${{ secrets.DB_NAME }}" },
+
+              { "name": "GROQ_API_KEY", "value": "${{ secrets.GROQ_API_KEY }}" },
+              { "name": "HF_API_KEY", "value": "${{ secrets.HF_API_KEY }}" },
+              { "name": "ANIMALDETECT_API_KEY", "value": "${{ secrets.ANIMALDETECT_API_KEY }}" },
+              { "name": "CORS_ORIGINS", "value": "${{ secrets.CORS_ORIGINS }}" },
+              { "name": "ADMIN_EMAIL", "value": "${{ secrets.ADMIN_EMAIL }}" }
+            ]
+          mask-inputs: true
+
+      - name: Deploy API container
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_API_NAME }}
+          images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-api:latest"
+
+      - name: Verify API health (public URL)
+        run: |
+          set -e
+          BASE="${{ secrets.WNE_API_PUBLIC_BASE_URL }}"
+          BASE="${BASE%/}"
+          echo "Checking ${BASE}/health ..."
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -sf --max-time 25 "${BASE}/health" >/dev/null; then
+              ok=1
+              break
+            fi
+            echo "Attempt ${i}: waiting for API..."
+            sleep 10
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::API health check failed after deploy"
+            exit 1
+          fi
+          echo "API health OK"
+
+  deploy-frontend:
+    name: Deploy frontend (Azure Web App container)
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.ENVIRONMENT }}
+    needs: [docker-build-frontend, supabase-db-migrations]
+    if: ${{ inputs.SKIP_DEPLOY != true }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Set Azure App Service settings (Frontend)
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_FRONTEND_NAME }}
+          app-settings-json: |
+            [
+              { "name": "WNE_API_PUBLIC_BASE_URL", "value": "${{ secrets.WNE_API_PUBLIC_BASE_URL }}" }
+            ]
+          mask-inputs: true
+
+      - name: Deploy frontend container
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_FRONTEND_NAME }}
+          images: "${{ secrets.DOCKERHUB_USERNAME }}/wne-web:latest"
+
+      - name: Verify frontend (public URL)
+        env:
+          BASE_URL: ${{ secrets.WNE_FRONTEND_PUBLIC_URL }}
+        run: |
+          if [ -z "${BASE_URL:-}" ]; then
+            echo "WNE_FRONTEND_PUBLIC_URL not set — skipping SPA HTTP check"
+            exit 0
+          fi
+          BASE="${BASE_URL%/}"
+          echo "Checking ${BASE}/ ..."
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -sfL --max-time 25 -o /dev/null "${BASE}/"; then
+              ok=1
+              break
+            fi
+            echo "Attempt ${i}: waiting for frontend..."
+            sleep 10
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::Frontend HTTP check failed after deploy"
+            exit 1
+          fi
+          echo "Frontend OK"
+
+  ci-notify-failure:
+    name: Notify on pipeline failure
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - backend-build
+      - backend-lint
+      - frontend-build
+      - frontend-prettier
+      - db-setup
+      - unit-tests
+      - integration-tests
+      - supabase-db-migrations
+      - docker-build-api
+      - docker-build-frontend
+      - deploy-api
+      - deploy-frontend
+    steps:
+      - name: Summarize job results & notify webhook
+        uses: actions/github-script@v7
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+          WEBHOOK_URL: ${{ secrets.CI_FAILURE_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            const needs = JSON.parse(process.env.NEEDS_JSON || '{}');
+            const webhook = process.env.WEBHOOK_URL || '';
+            const runUrl = process.env.RUN_URL || '';
+            const failed = [];
+            for (const [name, data] of Object.entries(needs)) {
+              if (data.result === 'failure') failed.push(name);
+            }
+            if (failed.length === 0) {
+              core.info('No failed jobs in dependency graph — skipping notify.');
+              return;
+            }
+            const lines = [
+              '*Wild Nature Explorer - CI/CD failure*',
+              `Workflow: ${context.workflow}`,
+              `Repo: ${context.repo.owner}/${context.repo.repo}`,
+              `Ref: ${context.ref}`,
+              `SHA: \`${context.sha.substring(0, 7)}\``,
+              `Run: ${runUrl}`,
+              `Failed jobs: ${failed.join(', ')}`,
+            ];
+            const text = lines.join('\n');
+            core.summary.addRaw(text.replace(/\*/g, '') + '\n').write();
+            if (!webhook) {
+              core.warning('CI_FAILURE_WEBHOOK_URL secret is not set — summary written only.');
+              return;
+            }
+            try {
+              const res = await fetch(webhook, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text }),
+              });
+              if (!res.ok) {
+                core.warning(`Webhook POST failed: HTTP ${res.status}`);
+              }
+            } catch (e) {
+              core.warning(`Webhook error: ${e.message}`);
+            }
