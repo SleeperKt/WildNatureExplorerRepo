@@ -1,38 +1,50 @@
-# Wild Nature Explorer – Frontend
+﻿# Wild Nature Explorer – Frontend
 
-SPA веб-платформы для изучения дикой природы.
+This directory contains the Single Page Application (SPA) for the Wild Nature Explorer platform. It provides an interactive UI for wildlife exploration, species cataloging, map tracking, and AI-driven features.
 
-## Стек технологий
-- **Рендеринг и сборка**: React 19, Vite 7
-- **Маршрутизация**: React Router v7
-- **Карты**: Leaflet + react-leaflet
-- **Сетевые запросы**: axios
-- **Анимации**: GSAP
-- **Мобильная обертка**: Capacitor (Поддержка Android)
-- **Линтинг и форматирование**: ESLint + Prettier
+## Tech Stack
+- **Framework:** React 19
+- **Build Tool:** Vite 7
+- **Routing:** React Router v7
+- **Maps & Geolocation:** Leaflet + React-Leaflet
+- **State/Data Fetching:** Axios
+- **Animations:** GSAP
+- **Mobile Integration:** Capacitor (for Android app generation)
+- **Code Quality:** ESLint & Prettier
 
-## Запуск для разработки
+## Getting Started
 
-Требуется Node.js (совместимый с Vite 7).
+### Prerequisites
+- **Node.js**: Version 20 or LTS compatible with Vite 7.
+- **Backend API**: The backend should be running locally (usually on port 5000) for full functionality.
 
+### Installation
 ```bash
-# Установка зависимостей
 npm ci
+```
 
-# Запуск dev-сервера (локально на http://localhost:5173)
+### Local Development
+To run the development server with Hot Module Replacement (HMR):
+```bash
 npm run dev
 ```
+The server will start at `http://localhost:5173`. By default, Vite is configured to proxy `/api` requests to `http://localhost:5000`.
 
-В режиме разработки все запросы по пути `/api` проксируются на бекенд. 
-По умолчанию используется `http://localhost:5000`. Изменить можно через переменную окружения `.env`:
+### Environment Variables
+To override the default API proxy target, create a `.env` file based on `.env.example` (if present) or add:
 ```env
-VITE_DEV_PROXY_TARGET=http://api.myproject.local:5000
+VITE_DEV_PROXY_TARGET=http://your-custom-backend-url:5000
 ```
+For production Docker builds, the base URL is provided via the `WNE_API_PUBLIC_BASE_URL` build argument.
 
-## Доступные скрипты
+## Available Scripts
 
-- `npm run dev` — Запуск dev-сервера с HMR.
-- `npm run build` — Сборка продакшен-версии (в папку `dist/`).
-- `npm run preview` — Локальный превью-сервер собранной production-версии.
-- `npm run lint` — Проверка кода линтером.
-- `npm run format` — Автоформатирование кода с помощью Prettier.
+- `npm run dev`: Starts the local development server.
+- `npm run build`: Builds the app for production to the `dist/` folder.
+- `npm run preview`: Bootstraps a local static web server to preview the production build.
+- `npm run lint`: Analyzes code for potential errors using ESLint.
+- `npm run format`: Formats code automatically using Prettier.
+- `npm run format:check`: Checks if the code matches Prettier formatting rules without making changes.
+
+## Mobile Support (Capacitor)
+This frontend is integrated with Capacitor to build the Android application located in `../android-alert-app`. Capacitor bundles the output from `dist/` into native mobile views.
